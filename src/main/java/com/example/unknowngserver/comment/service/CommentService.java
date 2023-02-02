@@ -10,6 +10,8 @@ import com.example.unknowngserver.comment.repository.CommentRepository;
 import com.example.unknowngserver.exception.ArticleException;
 import com.example.unknowngserver.exception.CommentException;
 import com.example.unknowngserver.exception.ErrorCode;
+import com.example.unknowngserver.report.entity.ReportComment;
+import com.example.unknowngserver.report.repository.ReportCommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +31,7 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final ArticleRepository articleRepository;
+    private final ReportCommentRepository reportCommentRepository;
 
     @Transactional(readOnly = true)
     public List<CommentDto> getComments(Long articleId, Integer page) {
@@ -57,9 +61,9 @@ public class CommentService {
                 .registeredAt(LocalDateTime.now())
                 .build();
 
-        commentRepository.save(comment);
 
-        article.addComment(comment);
+        comment.addArticle(article);
+        commentRepository.save(comment);
 
         return true;
     }
@@ -73,6 +77,9 @@ public class CommentService {
         if (!BCrypt.checkpw(deleteCommentRequest.getPassword(), comment.getPassword())) {
             throw new CommentException(ErrorCode.NO_PERMISSION);
         }
+
+        Optional<ReportComment> reportComment = reportCommentRepository.findByComment(comment);
+        reportComment.ifPresent(reportCommentRepository::delete);
 
         commentRepository.delete(comment);
         return true;

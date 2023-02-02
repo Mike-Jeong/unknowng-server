@@ -7,6 +7,9 @@ import com.example.unknowngserver.article.entity.Article;
 import com.example.unknowngserver.article.repository.ArticleRepository;
 import com.example.unknowngserver.exception.ArticleException;
 import com.example.unknowngserver.exception.ErrorCode;
+import com.example.unknowngserver.report.entity.ReportArticle;
+import com.example.unknowngserver.report.repository.ReportArticleRepository;
+import com.example.unknowngserver.report.repository.ReportRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 public class ArticleService {
 
     private final ArticleRepository articleRepository;
+    private final ReportArticleRepository reportArticleRepository;
 
     @Transactional(readOnly = true)
     public ArticleDto getArticle(Long id) {
@@ -69,6 +74,9 @@ public class ArticleService {
         if (!BCrypt.checkpw(deleteArticleRequest.getPassword(), article.getPassword())) {
             throw new ArticleException(ErrorCode.NO_PERMISSION);
         }
+
+        Optional<ReportArticle> reportArticle = reportArticleRepository.findByArticle(article);
+        reportArticle.ifPresent(reportArticleRepository::delete);
 
         articleRepository.delete(article);
         return true;
