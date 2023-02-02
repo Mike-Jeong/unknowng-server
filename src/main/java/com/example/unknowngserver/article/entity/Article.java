@@ -2,7 +2,6 @@ package com.example.unknowngserver.article.entity;
 
 import com.example.unknowngserver.comment.entity.Comment;
 import com.example.unknowngserver.report.entity.ReportArticle;
-import com.example.unknowngserver.test.entity.ReportArticleTest;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -36,21 +35,4 @@ public class Article {
     @Builder.Default
     private boolean deleted = false;
     private LocalDateTime deletedAt;
-
-    @Builder.Default
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "article", cascade = CascadeType.REMOVE)
-    private List<Comment> comments = new ArrayList<>();
-
-    public void addComment(Comment comment) {
-        comment.addArticle(this);
-        this.comments.add(comment);
-    }
-
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "article", cascade = CascadeType.REMOVE)
-    private ReportArticle reportArticle;
-
-    public void addArticleReport(ReportArticle reportArticle) {
-        reportArticle.addArticle(this);
-        this.reportArticle = reportArticle;
-    }
 }

@@ -17,7 +17,7 @@ import java.util.List;
 @Entity
 @SQLDelete(sql = "UPDATE report SET processed = true, processedAt = current_timestamp WHERE id = ? ")
 @Where(clause = "processed = false")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "content_type")
 public class Report {
     @Id
@@ -26,18 +26,10 @@ public class Report {
     private LocalDateTime firstReportedAt;
     @Column(name="content_type", nullable=false, updatable=false, insertable=false)
     private String contentType;
-    private Integer contentId;
+    private Integer reportedCount;
 
     @Builder.Default
     private boolean processed = Boolean.FALSE;
     private LocalDateTime processedAt;
 
-    @Builder.Default
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "report", cascade = CascadeType.REMOVE)
-    private List<ReportRecord> reportDetails = new ArrayList<>();
-
-    public void addReportDetail(ReportRecord reportRecord) {
-        reportRecord.addReport(this);
-        this.reportDetails.add(reportRecord);
-    }
 }
