@@ -1,8 +1,6 @@
 package com.example.unknowngserver.report.entity;
 
 import com.example.unknowngserver.article.entity.Article;
-import com.example.unknowngserver.test.entity.ArticleTest;
-import com.example.unknowngserver.test.entity.ReportTest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,8 +22,4 @@ import javax.persistence.OneToOne;
 public class ReportArticle extends Report {
     @OneToOne(fetch = FetchType.LAZY)
     private Article article;
-
-    public void addArticle(Article article) {
-        this.article = article;
-    };
 }

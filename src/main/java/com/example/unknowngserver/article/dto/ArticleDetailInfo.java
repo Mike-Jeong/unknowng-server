@@ -11,15 +11,15 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Getter
-public class ArticleDetail {
+public class ArticleDetailInfo {
     private Long id;
     private String author;
     private String title;
     private String content;
     private LocalDate createDate;
 
-    public static ArticleDetail fromArticleDto(ArticleDto articleDto) {
-        return ArticleDetail.builder()
+    public static ArticleDetailInfo fromArticleDto(ArticleDto articleDto) {
+        return ArticleDetailInfo.builder()
                 .id(articleDto.getId())
                 .author(articleDto.getAuthor())
                 .title(articleDto.getTitle())

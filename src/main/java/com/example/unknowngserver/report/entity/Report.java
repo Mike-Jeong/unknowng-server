@@ -32,4 +32,7 @@ public class Report {
     private boolean processed = Boolean.FALSE;
     private LocalDateTime processedAt;
 
+    public void updateReportedCount(Integer reportedCount) {
+        this.reportedCount = reportedCount;
+    }
 }

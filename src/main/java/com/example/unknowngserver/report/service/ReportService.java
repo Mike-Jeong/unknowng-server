@@ -1,7 +1,5 @@
 package com.example.unknowngserver.report.service;
 
-import com.example.unknowngserver.article.repository.ArticleRepository;
-import com.example.unknowngserver.comment.repository.CommentRepository;
 import com.example.unknowngserver.exception.ErrorCode;
 import com.example.unknowngserver.exception.ReportException;
 import com.example.unknowngserver.report.dto.ReportDetailDto;
@@ -29,13 +27,13 @@ import java.util.stream.Collectors;
 public class ReportService {
     private final ReportRepository reportRepository;
     private final ReportRecordRepository reportRecordRepository;
-    private final ArticleRepository articleRepository;
-    private final CommentRepository commentRepository;
+    private final ReportArticleService reportArticleService;
+    private final ReportCommentService reportCommentService;
 
     @Transactional(readOnly = true)
-    public List<ReportDto> getReports(Integer page){
+    public List<ReportDto> getReports(Integer page) {
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("id").descending());
+        PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("id").descending());
 
         Page<Report> reportPageList = reportRepository.findAll(pageRequest);
 
@@ -47,10 +45,9 @@ public class ReportService {
     @Transactional(readOnly = true)
     public List<ReportRecordDto> getReportRecords(Long reportId, Integer page) {
 
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportException(ErrorCode.REPORT_NOT_FOUND));
+        Report report = findReport(reportId);
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("id").descending());
+        PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("reportedDt").descending());
 
         Page<ReportRecord> reportRecordPageList = reportRecordRepository.findAllByReport(report, pageRequest);
 
@@ -59,40 +56,51 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public ReportDetailDto getReportDetail(Long reportId) {
-
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportException(ErrorCode.REPORT_NOT_FOUND));
-
-        return report.getContentType().equals("ARTICLE") ? ReportDetailDto.fromReportArticleEntity((ReportArticle) report)
-                : ReportDetailDto.fromReportCommentEntity((ReportComment) report);
-    }
-
-    @Transactional
-    public boolean deleteReport(Long reportId) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportException(ErrorCode.REPORT_NOT_FOUND));
-
-        reportRepository.delete(report);
-        return true;
-    }
-
-    /*@Transactional
     public boolean createReport(SubmitReportRequest submitReportRequest) {
 
-        Report report = reportRepository.findById(reportId)
+        if (submitReportRequest.getContentType().equals("ARTICLE")) {
+            return reportArticleService.createReportArticle(submitReportRequest);
+        }
+
+        if (submitReportRequest.getContentType().equals("COMMENT")) {
+            return reportCommentService.createReportComment(submitReportRequest);
+        }
+
+        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
+    }
+
+    public boolean deleteReport(Long reportId) {
+
+        Report report = findReport(reportId);
+
+        if (report.getContentType().equals("ARTICLE")) {
+            return reportArticleService.deleteReportArticle((ReportArticle) report);
+        }
+
+        if (report.getContentType().equals("COMMENT")) {
+            return reportCommentService.deleteReportComment((ReportComment) report);
+        }
+
+        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
+    }
+
+    public ReportDetailDto getReportDetail(Long reportId) {
+
+        Report report = findReport(reportId);
+
+        if (report.getContentType().equals("ARTICLE")) {
+            return reportArticleService.getReportArticleDetail((ReportArticle) report);
+        }
+
+        if (report.getContentType().equals("COMMENT")) {
+            return reportCommentService.getReportCommentDetail((ReportComment) report);
+        }
+
+        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
+    }
+
+    public Report findReport(Long reportId) {
+        return reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportException(ErrorCode.REPORT_NOT_FOUND));
-
-        reportRepository.delete(report);
-        return true;
     }
-
-    public Report findReportFromArticle (Long articleId) {
-        Report report = articleRepository.findById(articleId).get().getReportArticle();
-    }
-
-    public Report findReportFromComment (Long articleId) {
-
-    }*/
 }

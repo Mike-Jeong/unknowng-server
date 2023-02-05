@@ -26,7 +26,7 @@ public class ReportDetailDto {
                 .reportId(reportArticle.getId())
                 .reportedContentType(reportArticle.getContentType())
                 .targetId(reportArticle.getArticle().getId())
-                .reportedCount(reportArticle.getReportDetails().size())
+                .reportedCount(reportArticle.getReportedCount())
                 .firstReportedAt(reportArticle.getFirstReportedAt())
                 .build();
     }
@@ -36,7 +36,7 @@ public class ReportDetailDto {
                 .reportId(reportComment.getId())
                 .reportedContentType(reportComment.getContentType())
                 .targetId(reportComment.getComment().getId())
-                .reportedCount(reportComment.getReportDetails().size())
+                .reportedCount(reportComment.getReportedCount())
                 .firstReportedAt(reportComment.getFirstReportedAt())
                 .build();
     }

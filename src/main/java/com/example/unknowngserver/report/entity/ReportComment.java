@@ -1,6 +1,5 @@
 package com.example.unknowngserver.report.entity;
 
-import com.example.unknowngserver.article.entity.Article;
 import com.example.unknowngserver.comment.entity.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,8 +22,4 @@ import javax.persistence.OneToOne;
 public class ReportComment extends Report {
     @OneToOne(fetch = FetchType.LAZY)
     private Comment comment;
-
-    public void addComment(Comment comment) {
-        this.comment = comment;
-    };
 }

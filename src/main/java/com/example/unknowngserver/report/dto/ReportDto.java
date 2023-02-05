@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class ReportDto {
     private Long reportId;
     private String reportedContentType;
-    private int reportedCount;
+    private Integer reportedCount;
     private LocalDateTime firstReportedAt;
 
     public static ReportDto fromEntity(Report report) {
@@ -23,7 +23,7 @@ public class ReportDto {
                 .reportId(report.getId())
                 .reportedContentType(report.getContentType())
                 .firstReportedAt(report.getFirstReportedAt())
-                .reportedCount(report.getReportDetails().size())
+                .reportedCount(report.getReportedCount())
                 .build();
     }
 }
