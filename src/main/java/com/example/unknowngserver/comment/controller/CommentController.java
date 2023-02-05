@@ -21,7 +21,9 @@ public class CommentController {
 
     @GetMapping("/articles/{articleId}/comments")
     public ResponseEntity<List<CommentInfo>> getComments(@PathVariable("articleId") Long articleId,
-                                                         @RequestParam(defaultValue = "10", required = false) Integer page) {
+                                                         @RequestParam(defaultValue = "1", required = false) Integer page) {
+
+        page = (page < 1) ? 1 : page;
 
         List<CommentDto> commentDtoList = commentService.getComments(articleId, page);
 

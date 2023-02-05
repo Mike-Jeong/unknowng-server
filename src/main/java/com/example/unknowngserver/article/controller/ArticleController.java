@@ -17,16 +17,18 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @GetMapping("/articles/{id}")
-    public ResponseEntity<ArticleDetail> getArticle(@PathVariable("id") Long id) {
+    public ResponseEntity<ArticleDetailInfo> getArticle(@PathVariable("id") Long id) {
 
         ArticleDto articleDto = articleService.getArticle(id);
 
-        return ResponseEntity.ok(ArticleDetail.fromArticleDto(articleDto));
+        return ResponseEntity.ok(ArticleDetailInfo.fromArticleDto(articleDto));
     }
 
     @GetMapping("/articles")
-    public ResponseEntity<List<ArticleBoardInfo>> getArticles(@RequestParam(defaultValue = "10", required = false) Integer page,
+    public ResponseEntity<List<ArticleBoardInfo>> getArticles(@RequestParam(defaultValue = "1", required = false) Integer page,
                                                               @RequestParam(defaultValue = "", required = false) String keyWord) {
+
+        page = (page < 1) ? 1 : page;
 
         List<ArticleDto> articleDtoList = articleService.getArticles(page, keyWord);
 

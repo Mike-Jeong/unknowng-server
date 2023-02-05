@@ -38,7 +38,7 @@ public class CommentService {
 
         Article article = findArticle(articleId);
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("id").descending());
+        PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("id").descending());
 
         Page<Comment> commentPageList = commentRepository.findAllByArticle(article, pageRequest);
 

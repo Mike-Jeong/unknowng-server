@@ -9,7 +9,6 @@ import com.example.unknowngserver.exception.ArticleException;
 import com.example.unknowngserver.exception.ErrorCode;
 import com.example.unknowngserver.report.entity.ReportArticle;
 import com.example.unknowngserver.report.repository.ReportArticleRepository;
-import com.example.unknowngserver.report.repository.ReportRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +40,7 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public List<ArticleDto> getArticles(Integer page, String keyWord) {
 
-        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("id").descending());
+        PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("id").descending());
 
         Page<Article> articlePageList = keyWord.isBlank() ? articleRepository.findAll(pageRequest)
                 : articleRepository.findByTitleContains(pageRequest, keyWord);
