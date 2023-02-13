@@ -26,11 +26,11 @@ public class ArticleController {
 
     @GetMapping("/articles")
     public ResponseEntity<List<ArticleBoardInfo>> getArticles(@RequestParam(defaultValue = "1", required = false) Integer page,
-                                                              @RequestParam(defaultValue = "", required = false) String keyWord) {
+                                                              @RequestParam(defaultValue = "", required = false) String keyword) {
 
         page = (page < 1) ? 1 : page;
 
-        List<ArticleDto> articleDtoList = articleService.getArticles(page, keyWord);
+        List<ArticleDto> articleDtoList = articleService.getArticles(page, keyword);
 
         return ResponseEntity.ok(articleDtoList.stream()
                 .map(ArticleBoardInfo::fromArticleDto)

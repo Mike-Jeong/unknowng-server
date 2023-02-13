@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Entity
-@SQLDelete(sql = "UPDATE article SET deleted = true, blockedAt = current_timestamp WHERE id = ?")
+@SQLDelete(sql = "UPDATE article SET deleted = true, deleted_at = current_timestamp WHERE id = ?")
 @Where(clause = "deleted = false")
 @EntityListeners(AuditingEntityListener.class)
 public class Article {

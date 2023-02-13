@@ -58,11 +58,10 @@ public class CommentService {
                 .content(submitCommentRequest.getContent())
                 .author(submitCommentRequest.getAuthor())
                 .password(encPassword)
+                .article(article)
                 .registeredAt(LocalDateTime.now())
                 .build();
 
-
-        comment.addArticle(article);
         commentRepository.save(comment);
 
         return true;

@@ -38,12 +38,12 @@ public class ArticleService {
     }
 
     @Transactional(readOnly = true)
-    public List<ArticleDto> getArticles(Integer page, String keyWord) {
+    public List<ArticleDto> getArticles(Integer page, String keyword) {
 
         PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("id").descending());
 
-        Page<Article> articlePageList = keyWord.isBlank() ? articleRepository.findAll(pageRequest)
-                : articleRepository.findByTitleContains(pageRequest, keyWord);
+        Page<Article> articlePageList = keyword.isBlank() ? articleRepository.findAll(pageRequest)
+                : articleRepository.findByTitleContains(pageRequest, keyword);
 
         return articlePageList.stream()
                 .map(ArticleDto::fromEntity)

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Entity
-@SQLDelete(sql = "UPDATE comment SET deleted = true, blockedAt = current_timestamp WHERE id = ? ")
+@SQLDelete(sql = "UPDATE comment SET deleted = true, deleted_at = current_timestamp WHERE id = ? ")
 @Where(clause = "deleted = false")
 public class Comment {
     @Id
@@ -25,12 +25,9 @@ public class Comment {
     private LocalDateTime registeredAt;
 
     @Builder.Default
-    private boolean isBlocked = false;
-    private LocalDateTime blockedAt;
+    private boolean deleted = false;
+    private LocalDateTime deletedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private Article article;
-
-    public void addArticle(Article article) {
-        this.article = article;
-    }
 }

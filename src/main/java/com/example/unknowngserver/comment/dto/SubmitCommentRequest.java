@@ -11,7 +11,6 @@ import javax.validation.constraints.NotNull;
 public class SubmitCommentRequest {
 
     private Long articleId;
-    private String title;
     private String content;
     private String author;
     private String password;
