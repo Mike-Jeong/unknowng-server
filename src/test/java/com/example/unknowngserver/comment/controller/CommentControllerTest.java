@@ -98,7 +98,7 @@ class CommentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .content(objectMapper.writeValueAsString(
-                                new SubmitCommentRequest(1L, "test", "test", "test", "test")
+                                new SubmitCommentRequest(1L, "test", "test", "test")
                         )))
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"))
