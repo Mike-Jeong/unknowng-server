@@ -287,6 +287,7 @@ class ArticleServiceTest {
                 .firstReportedAt(LocalDateTime.now())
                 .reportedCount(1)
                 .article(article)
+                .contentType("ARTICLE")
                 .build();
 
         given(articleRepository.findById(anyLong()))
