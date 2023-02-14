@@ -12,6 +12,7 @@ import com.example.unknowngserver.report.repository.ReportArticleRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -58,14 +59,14 @@ class ArticleServiceTest {
                 .registeredAt(LocalDateTime.now())
                 .build();
 
-        given(articleRepository.findById(anyLong()))
+        given(articleRepository.findById(1L))
                 .willReturn(Optional.of(article));
 
         //when
         ArticleDto articleDto = articleService.getArticle(1L);
 
         //then
-        verify(articleRepository).findById(anyLong());
+        verify(articleRepository).findById(1L);
         assertEquals(1L, articleDto.getId());
         assertEquals("test", articleDto.getTitle());
         assertEquals("테스트용", articleDto.getContent());
@@ -79,7 +80,7 @@ class ArticleServiceTest {
 
         //given
 
-        given(articleRepository.findById(anyLong()))
+        given(articleRepository.findById(1L))
                 .willReturn(Optional.empty());
 
         //when
@@ -87,7 +88,7 @@ class ArticleServiceTest {
                 () -> articleService.getArticle(1L));
 
         //then
-        verify(articleRepository).findById(anyLong());
+        verify(articleRepository).findById(1L);
         assertEquals(ErrorCode.ARTICLE_NOT_FOUND, articleException.getErrorCode());
 
     }
@@ -187,12 +188,14 @@ class ArticleServiceTest {
         given(articleRepository.findByTitleContains(any(), anyString()))
                 .willReturn(articlePageList);
 
+        ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+
         //when
         List<ArticleDto> articleDtoList = articleService.getArticles(1, "test");
 
         //then
         verify(articleRepository, never()).findAll((Pageable) any());
-        verify(articleRepository).findByTitleContains(any(), anyString());
+        verify(articleRepository).findByTitleContains(any(), stringArgumentCaptor.capture());
         assertEquals(3, articleDtoList.size());
         assertEquals(1L, articleDtoList.get(0).getId());
         assertEquals("test1", articleDtoList.get(0).getTitle());
@@ -200,6 +203,7 @@ class ArticleServiceTest {
         assertEquals("test2", articleDtoList.get(1).getTitle());
         assertEquals(3L, articleDtoList.get(2).getId());
         assertEquals("test3", articleDtoList.get(2).getTitle());
+        assertEquals("test", stringArgumentCaptor.getValue());
 
     }
 
@@ -293,13 +297,16 @@ class ArticleServiceTest {
         given(BCrypt.checkpw(anyString(), anyString()))
                 .willReturn(true);
 
+        ArgumentCaptor<Article> articleArgumentCaptor = ArgumentCaptor.forClass(Article.class);
+        ArgumentCaptor<ReportArticle> reportArticleArgumentCaptor = ArgumentCaptor.forClass(ReportArticle.class);
+
         //when
         boolean result = articleService.deleteArticle(new DeleteArticleRequest(1L, "1234"));
 
         //then
-        verify(articleRepository).delete(any());
-        verify(reportArticleRepository).findByArticle(any());
-        verify(reportArticleRepository).delete(any());
+        verify(articleRepository).delete(articleArgumentCaptor.capture());
+        verify(reportArticleRepository).findByArticle(articleArgumentCaptor.capture());
+        verify(reportArticleRepository).delete(reportArticleArgumentCaptor.capture());
         assertTrue(result);
 
     }

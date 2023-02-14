@@ -96,17 +96,19 @@ class CommentServiceTest {
 
         Page<Comment> commentPageList = new PageImpl<>(commentList);
 
-        given(articleRepository.findById(anyLong()))
+        given(articleRepository.findById(1L))
                 .willReturn(Optional.of(article));
         given(commentRepository.findAllByArticle(any(), any()))
                 .willReturn(commentPageList);
+
+        ArgumentCaptor<Article> articleArgumentCaptor = ArgumentCaptor.forClass(Article.class);
 
         //when
         List<CommentDto> commentDtoList = commentService.getComments(1L, 1);
 
         //then
         verify(articleRepository).findById(anyLong());
-        verify(commentRepository).findAllByArticle(any(), any());
+        verify(commentRepository).findAllByArticle(articleArgumentCaptor.capture(), any());
         assertEquals(3, commentDtoList.size());
         assertEquals(1L, commentDtoList.get(0).getId());
         assertEquals("comment test 1", commentDtoList.get(0).getContent());
@@ -117,6 +119,8 @@ class CommentServiceTest {
         assertEquals(3L, commentDtoList.get(2).getId());
         assertEquals("comment test 3", commentDtoList.get(2).getContent());
         assertEquals("ctest3", commentDtoList.get(2).getAuthor());
+        assertEquals(article.getId(), articleArgumentCaptor.getValue().getId());
+        assertEquals(article.getAuthor(), articleArgumentCaptor.getValue().getAuthor());
     }
 
     @Test
@@ -151,31 +155,21 @@ class CommentServiceTest {
                 .registeredAt(LocalDateTime.now())
                 .build();
 
-        Comment comment1 = Comment.builder()
-                .id(1L)
-                .content("comment test 1")
-                .author("ctest1")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .article(article)
-                .build();
-
-        //ArgumentCaptor<Comment> captor = ArgumentCaptor.forClass(Comment.class);
-
-        given(articleRepository.findById(anyLong()))
+        given(articleRepository.findById(1L))
                 .willReturn(Optional.of(article));
         given(BCrypt.checkpw(anyString(), anyString()))
                 .willReturn(true);
+
+        ArgumentCaptor<Comment> commentArgumentCaptor = ArgumentCaptor.forClass(Comment.class);
 
         //when
         boolean result = commentService.createComment(new SubmitCommentRequest(1L, "comment test 1", "ctest1", "1234"));
 
         //then
         verify(articleRepository).findById(any());
-        verify(commentRepository).save(any());
-        //assertEquals(1L, captor.getValue().getId());
-        //assertEquals("comment test 1", captor.getValue().getContent());
-        //assertEquals("ctest1", captor.getValue().getAuthor());
+        verify(commentRepository).save(commentArgumentCaptor.capture());
+        assertEquals("comment test 1", commentArgumentCaptor.getValue().getContent());
+        assertEquals("ctest1", commentArgumentCaptor.getValue().getAuthor());
         assertTrue(result);
     }
 
@@ -193,7 +187,7 @@ class CommentServiceTest {
                 () -> commentService.createComment(new SubmitCommentRequest(1L, "comment test 1", "ctest1", "1234")));
 
         //then
-        verify(articleRepository).findById(any());
+        verify(articleRepository).findById(1L);
         assertEquals(ErrorCode.ARTICLE_NOT_FOUND, articleException.getErrorCode());
     }
 
@@ -217,15 +211,25 @@ class CommentServiceTest {
         given(reportCommentRepository.findByComment(comment1))
                 .willReturn(Optional.empty());
 
+        ArgumentCaptor<Comment> commentArgumentCaptor = ArgumentCaptor.forClass(Comment.class);
+
         //when
         boolean result = commentService.deleteComment(new DeleteCommentRequest(1L, "1234"));
 
         //then
-        verify(commentRepository).findById(anyLong());
-        verify(commentRepository).delete(any());
-        verify(reportCommentRepository).findByComment(any());
+        verify(commentRepository).findById(1L);
+        verify(commentRepository).delete(commentArgumentCaptor.capture());
+        verify(reportCommentRepository).findByComment(commentArgumentCaptor.capture());
         verify(reportCommentRepository, never()).delete(any());
+
         assertTrue(result);
+
+        List<Comment> commentList = commentArgumentCaptor.getAllValues();
+
+        for (Comment commentCapture : commentList) {
+            assertEquals(comment1, commentCapture);
+        }
+
     }
 
     @Test
@@ -255,15 +259,26 @@ class CommentServiceTest {
         given(reportCommentRepository.findByComment(comment1))
                 .willReturn(Optional.of(reportComment));
 
+        ArgumentCaptor<Comment> commentArgumentCaptor = ArgumentCaptor.forClass(Comment.class);
+        ArgumentCaptor<ReportComment> reportCommentArgumentCaptor = ArgumentCaptor.forClass(ReportComment.class);
+
         //when
         boolean result = commentService.deleteComment(new DeleteCommentRequest(1L, "1234"));
 
         //then
-        verify(commentRepository).findById(anyLong());
-        verify(commentRepository).delete(any());
-        verify(reportCommentRepository).findByComment(any());
-        verify(reportCommentRepository).delete(any());
+        verify(commentRepository).findById(1L);
+        verify(commentRepository).delete(commentArgumentCaptor.capture());
+        verify(reportCommentRepository).findByComment(commentArgumentCaptor.capture());
+        verify(reportCommentRepository).delete(reportCommentArgumentCaptor.capture());
+
         assertTrue(result);
+        assertEquals(reportComment, reportCommentArgumentCaptor.getValue());
+
+        List<Comment> commentList = commentArgumentCaptor.getAllValues();
+
+        for (Comment commentCapture : commentList) {
+            assertEquals(comment1, commentCapture);
+        }
     }
 
     @Test
@@ -279,7 +294,7 @@ class CommentServiceTest {
                 () -> commentService.deleteComment(new DeleteCommentRequest(1L, "1234")));
 
         //then
-        verify(commentRepository).findById(anyLong());
+        verify(commentRepository).findById(1L);
         assertEquals(ErrorCode.COMMENT_NOT_FOUND, commentException.getErrorCode());
     }
 
@@ -307,7 +322,7 @@ class CommentServiceTest {
                 () -> commentService.deleteComment(new DeleteCommentRequest(1L, "1234")));
 
         //then
-        verify(commentRepository).findById(anyLong());
+        verify(commentRepository).findById(1L);
         assertEquals(ErrorCode.NO_PERMISSION, commentException.getErrorCode());
     }
 
