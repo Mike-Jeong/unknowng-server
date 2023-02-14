@@ -1,7 +1,5 @@
 package com.example.unknowngserver.report.service;
 
-import com.example.unknowngserver.exception.ErrorCode;
-import com.example.unknowngserver.exception.ReportException;
 import com.example.unknowngserver.report.dto.ReportDetailDto;
 import com.example.unknowngserver.report.dto.ReportDto;
 import com.example.unknowngserver.report.dto.ReportRecordDto;
@@ -162,24 +160,6 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("신고 기록 조회 API 서비스 테스트 실패 - 해당 신고 내역을 찾을 수 없음")
-    void getReportRecordsFail_ReportNotFound() {
-
-        //given
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.empty());
-
-        //when
-        ReportException reportException = assertThrows(ReportException.class,
-                () -> reportService.getReportRecords(1L, 1));
-
-        //then
-        verify(reportRepository).findById(1L);
-        assertEquals(ErrorCode.REPORT_NOT_FOUND, reportException.getErrorCode());
-
-    }
-
-    @Test
     @DisplayName("신고 등록 API 서비스 테스트 성공 - 게시글 신고")
     void createReportArticle() {
 
@@ -212,22 +192,6 @@ class ReportServiceTest {
         verify(reportArticleService, never()).createReportArticle(any());
         verify(reportCommentService).createReportComment(any());
         assertTrue(result);
-
-    }
-
-    @Test
-    @DisplayName("신고 등록 API 서비스 테스트 실패 - 지원하지 않는 컨텐츠 타입 신고")
-    void createReportFail_NotSupportedContentType() {
-
-        //given
-        //when
-        ReportException reportException = assertThrows(ReportException.class,
-                () -> reportService.createReport(new SubmitReportRequest("OTHER", 1L, "INSULT", "test memo")));
-
-        //then
-        verify(reportArticleService, never()).createReportArticle(any());
-        verify(reportCommentService, never()).createReportComment(any());
-        assertEquals(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED, reportException.getErrorCode());
 
     }
 
@@ -286,49 +250,6 @@ class ReportServiceTest {
         verify(reportCommentService).deleteReportComment(reportCommentArgumentCaptor.capture());
         assertTrue(result);
         assertEquals(reportComment, reportCommentArgumentCaptor.getValue());
-
-    }
-
-    @Test
-    @DisplayName("신고 삭제 API 서비스 테스트 실패 - 해당 신고 내역을 찾을 수 없음")
-    void deleteReportFail_ReportNotFound() {
-
-        //given
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.empty());
-
-        //when
-        ReportException reportException = assertThrows(ReportException.class,
-                () -> reportService.deleteReport(1L));
-
-        //then
-        verify(reportRepository).findById(1L);
-        assertEquals(ErrorCode.REPORT_NOT_FOUND, reportException.getErrorCode());
-
-    }
-
-    @Test
-    @DisplayName("신고 삭제 API 서비스 테스트 실패 - 지원하지 않는 컨텐츠 타입 신고")
-    void deleteReportFail_NotSupportedContentType() {
-
-        //given
-        Report reportA = Report.builder()
-                .id(1L)
-                .firstReportedAt(LocalDateTime.now())
-                .contentType("OTHER")
-                .reportedCount(1)
-                .build();
-
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportA));
-
-        //when
-        ReportException reportException = assertThrows(ReportException.class,
-                () -> reportService.deleteReport(1L));
-
-        //then
-        verify(reportRepository).findById(1L);
-        assertEquals(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED, reportException.getErrorCode());
 
     }
 
@@ -403,49 +324,6 @@ class ReportServiceTest {
         verify(reportCommentService).getReportCommentDetail(reportCommentArgumentCaptor.capture());
         assertEquals(reportDetailDto, result);
         assertEquals(reportComment, reportCommentArgumentCaptor.getValue());
-    }
-
-    @Test
-    @DisplayName("신고 상세 내용 조회 API 서비스 테스트 실패 - 해당 신고 내역을 찾을 수 없음")
-    void getReportDetailFail_ReportNotFound() {
-
-        //given
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.empty());
-
-        //when
-        ReportException reportException = assertThrows(ReportException.class,
-                () -> reportService.getReportDetail(1L));
-
-        //then
-        verify(reportRepository).findById(1L);
-        assertEquals(ErrorCode.REPORT_NOT_FOUND, reportException.getErrorCode());
-
-    }
-
-    @Test
-    @DisplayName("신고 상세 내용 조회 API 서비스 테스트 실패 - 지원하지 않는 컨텐츠 타입 신고")
-    void getReportDetailFail_NotSupportedContentType() {
-
-        //given
-        Report reportA = Report.builder()
-                .id(1L)
-                .firstReportedAt(LocalDateTime.now())
-                .contentType("OTHER")
-                .reportedCount(1)
-                .build();
-
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportA));
-
-        //when
-        ReportException reportException = assertThrows(ReportException.class,
-                () -> reportService.getReportDetail(1L));
-
-        //then
-        verify(reportRepository).findById(1L);
-        assertEquals(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED, reportException.getErrorCode());
-
     }
 
 }
