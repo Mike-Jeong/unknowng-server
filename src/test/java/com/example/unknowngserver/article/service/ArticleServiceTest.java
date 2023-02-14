@@ -309,6 +309,14 @@ class ArticleServiceTest {
         verify(reportArticleRepository).delete(reportArticleArgumentCaptor.capture());
         assertTrue(result);
 
+        List<Article> articleList = articleArgumentCaptor.getAllValues();
+
+        for (Article articleCapture : articleList) {
+            assertEquals(article, articleCapture);
+        }
+
+        assertEquals("ARTICLE", reportArticleArgumentCaptor.getValue().getContentType());
+
     }
 
     @Test
