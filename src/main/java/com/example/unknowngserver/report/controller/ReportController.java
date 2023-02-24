@@ -48,12 +48,9 @@ public class ReportController {
         return ResponseEntity.ok(reportService.deleteReport(id));
     }
 
-    @GetMapping("/reports/{reportId}/report-records")
+    @GetMapping("/reports/{reportId}/reportRecords")
     public ResponseEntity<List<ReportRecordBoardInfo>> getReportRecords(@PathVariable("reportId") Long reportId,
                                                                         @RequestParam(defaultValue = "1", required = false) Integer page) {
-
-        page = (page < 1) ? 1 : page;
-
         List<ReportRecordDto> reportRecordDtoList = reportService.getReportRecords(reportId, page);
 
         return ResponseEntity.ok(reportRecordDtoList.stream()
