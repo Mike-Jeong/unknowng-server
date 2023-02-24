@@ -33,7 +33,7 @@ public class ReportService {
     @Transactional(readOnly = true)
     public List<ReportDto> getReports(Integer page) {
 
-        PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("id").descending());
+        PageRequest pageRequest = PageRequest.of(page - 1, 10, Sort.by("reportedCount").descending());
 
         Page<Report> reportPageList = reportRepository.findAll(pageRequest);
 
@@ -54,6 +54,22 @@ public class ReportService {
         return reportRecordPageList.stream()
                 .map(ReportRecordDto::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ReportDetailDto getReportDetail(Long reportId) {
+
+        Report report = findReport(reportId);
+
+        if (report.getContentType().equals("ARTICLE")) {
+            return reportArticleService.getReportArticleDetail(report);
+        }
+
+        if (report.getContentType().equals("COMMENT")) {
+            return reportCommentService.getReportCommentDetail(report);
+        }
+
+        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
     }
 
     public boolean createReport(SubmitReportRequest submitReportRequest) {
@@ -84,22 +100,7 @@ public class ReportService {
         throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
     }
 
-    public ReportDetailDto getReportDetail(Long reportId) {
-
-        Report report = findReport(reportId);
-
-        if (report.getContentType().equals("ARTICLE")) {
-            return reportArticleService.getReportArticleDetail((ReportArticle) report);
-        }
-
-        if (report.getContentType().equals("COMMENT")) {
-            return reportCommentService.getReportCommentDetail((ReportComment) report);
-        }
-
-        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
-    }
-
-    public Report findReport(Long reportId) {
+    private Report findReport(Long reportId) {
         return reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportException(ErrorCode.REPORT_NOT_FOUND));
     }

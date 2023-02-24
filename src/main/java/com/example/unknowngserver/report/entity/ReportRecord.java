@@ -13,8 +13,6 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Entity
-@SQLDelete(sql = "UPDATE report_record SET isHandled = true WHERE id = ? ")
-@Where(clause = "isHandled = false")
 public class ReportRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,11 +23,4 @@ public class ReportRecord {
     private ReportType reportType;
     private String memo;
     private LocalDateTime reportedDt;
-
-    @Builder.Default
-    private boolean isHandled = Boolean.FALSE;
-
-    public void addReport(Report report) {
-        this.report = report;
-    }
 }

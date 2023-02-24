@@ -18,7 +18,7 @@ import javax.persistence.OneToOne;
 @Getter
 @Entity
 @DiscriminatorValue("COMMENT")
-@SQLDelete(sql = "UPDATE report SET processed = true, processedAt = current_timestamp WHERE id = ? ")
+@SQLDelete(sql = "UPDATE report SET processed = true, processed_at = current_timestamp WHERE id = ? ")
 public class ReportComment extends Report {
     @OneToOne(fetch = FetchType.LAZY)
     private Comment comment;

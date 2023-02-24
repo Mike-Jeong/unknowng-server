@@ -6,6 +6,7 @@ import com.example.unknowngserver.exception.ArticleException;
 import com.example.unknowngserver.exception.ErrorCode;
 import com.example.unknowngserver.report.dto.ReportDetailDto;
 import com.example.unknowngserver.report.dto.SubmitReportRequest;
+import com.example.unknowngserver.report.entity.Report;
 import com.example.unknowngserver.report.entity.ReportArticle;
 import com.example.unknowngserver.report.entity.ReportRecord;
 import com.example.unknowngserver.report.repository.ReportArticleRepository;
@@ -25,11 +26,18 @@ public class ReportArticleService {
     private final ReportRecordRepository reportRecordRepository;
     private final ArticleRepository articleRepository;
 
+    public ReportDetailDto getReportArticleDetail(Report report) {
 
-    @Transactional(readOnly = true)
-    public ReportDetailDto getReportArticleDetail(ReportArticle report) {
+        ReportArticle reportArticle = (ReportArticle) report;
 
-        return ReportDetailDto.fromReportArticleEntity(report);
+        return ReportDetailDto.builder()
+                .reportId(reportArticle.getId())
+                .reportedContentType(reportArticle.getContentType())
+                .targetId(reportArticle.getArticle().getId())
+                .targetContent(reportArticle.getArticle().getContent())
+                .reportedCount(reportArticle.getReportedCount())
+                .firstReportedAt(reportArticle.getFirstReportedAt())
+                .build();
     }
 
     @Transactional
@@ -39,7 +47,7 @@ public class ReportArticleService {
         LocalDateTime currentTimeStamp = LocalDateTime.now();
 
         ReportArticle reportArticle = reportArticleRepository.findByArticle(article)
-                .orElse(reportArticleRepository.save(ReportArticle.builder()
+                .orElseGet(() -> reportArticleRepository.save(ReportArticle.builder()
                         .firstReportedAt(currentTimeStamp)
                         .article(article)
                         .build()));
