@@ -15,7 +15,7 @@ import java.util.List;
 @SuperBuilder
 @Getter
 @Entity
-@SQLDelete(sql = "UPDATE report SET processed = true, processed_at = current_timestamp WHERE id = ? ")
+@SQLDelete(sql = "UPDATE report SET processed = true, processedAt = current_timestamp WHERE id = ? ")
 @Where(clause = "processed = false")
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "content_type")
