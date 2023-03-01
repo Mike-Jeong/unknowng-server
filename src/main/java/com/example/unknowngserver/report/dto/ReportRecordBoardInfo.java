@@ -10,12 +10,17 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ReportRecordBoardInfo {
     private ReportType reportType;
     private String memo;
     private LocalDateTime reportedDt;
+
+    @Builder
+    public ReportRecordBoardInfo(ReportType reportType, String memo, LocalDateTime reportedDt) {
+        this.reportType = reportType;
+        this.memo = memo;
+        this.reportedDt = reportedDt;
+    }
 
     public static ReportRecordBoardInfo fromReportRecordDto(ReportRecordDto reportRecordDto) {
         return ReportRecordBoardInfo.builder()

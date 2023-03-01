@@ -9,13 +9,19 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class CommentInfo {
     private Long id;
     private String author;
     private String content;
     private LocalDateTime createDate;
+
+    @Builder
+    public CommentInfo(Long id, String author, String content, LocalDateTime createDate) {
+        this.id = id;
+        this.author = author;
+        this.content = content;
+        this.createDate = createDate;
+    }
 
     public static CommentInfo fromCommentDto(CommentDto commentDto) {
         return CommentInfo.builder()

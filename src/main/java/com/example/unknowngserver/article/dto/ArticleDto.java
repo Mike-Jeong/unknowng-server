@@ -5,14 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.EntityListeners;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Getter
 public class ArticleDto {
     private Long id;
@@ -21,7 +17,16 @@ public class ArticleDto {
     private String author;
     private LocalDateTime registeredAt;
 
-    public static ArticleDto fromEntity(Article article) {
+    @Builder
+    public ArticleDto(Long id, String title, String content, String author, LocalDateTime registeredAt) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.author = author;
+        this.registeredAt = registeredAt;
+    }
+
+    public static ArticleDto fromArticle(Article article) {
         return ArticleDto.builder()
                 .id(article.getId())
                 .title(article.getTitle())

@@ -6,6 +6,7 @@ import com.example.unknowngserver.exception.CommentException;
 import com.example.unknowngserver.exception.ErrorCode;
 import com.example.unknowngserver.report.dto.ReportDetailDto;
 import com.example.unknowngserver.report.dto.SubmitReportRequest;
+import com.example.unknowngserver.report.entity.Report;
 import com.example.unknowngserver.report.entity.ReportComment;
 import com.example.unknowngserver.report.entity.ReportRecord;
 import com.example.unknowngserver.report.repository.ReportCommentRepository;
@@ -25,19 +26,28 @@ public class ReportCommentService {
     private final ReportRecordRepository reportRecordRepository;
     private final CommentRepository commentRepository;
 
-    @Transactional(readOnly = true)
-    public ReportDetailDto getReportCommentDetail(ReportComment report) {
+    public ReportDetailDto getReportCommentDetail(Report report) {
 
-        return ReportDetailDto.fromReportCommentEntity(report);
+        ReportComment reportComment = (ReportComment) report;
+
+        return ReportDetailDto.builder()
+                .reportId(reportComment.getId())
+                .reportedContentType(reportComment.getContentType())
+                .targetId(reportComment.getComment().getId())
+                .targetContent(reportComment.getComment().getContent())
+                .reportedCount(reportComment.getReportedCount())
+                .firstReportedAt(reportComment.getFirstReportedAt())
+                .build();
     }
 
     @Transactional
-    public boolean createReportComment(SubmitReportRequest submitReportRequest) {
+    public void createReportComment(SubmitReportRequest submitReportRequest) {
+
         Comment comment = findComment(submitReportRequest.getContentId());
         LocalDateTime currentTimeStamp = LocalDateTime.now();
 
         ReportComment reportComment = reportCommentRepository.findByComment(comment)
-                .orElse(reportCommentRepository.save(ReportComment.builder()
+                .orElseGet(() -> reportCommentRepository.save(ReportComment.builder()
                         .firstReportedAt(currentTimeStamp)
                         .comment(comment)
                         .build()));
@@ -51,16 +61,13 @@ public class ReportCommentService {
 
         reportComment.updateReportedCount(reportRecordRepository.countReportRecordByReport(reportComment));
 
-        return true;
     }
 
-    @Transactional
-    public boolean deleteReportComment(ReportComment report) {
+    public void deleteReportComment(ReportComment report) {
 
         commentRepository.delete(report.getComment());
         reportCommentRepository.delete(report);
 
-        return true;
     }
 
     private Comment findComment(Long commentId) {

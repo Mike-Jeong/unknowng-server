@@ -21,4 +21,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse reportExceptionHandler(ReportException e) {
         return new ErrorResponse(e.getStatus(), e.getErrorCode(), e.getErrorMessage());
     }
+
+    @ExceptionHandler(PasswordException.class)
+    public ErrorResponse passwordExceptionHandler(PasswordException e) {
+        return new ErrorResponse(e.getStatus(), e.getErrorCode(), e.getErrorMessage());
+    }
 }

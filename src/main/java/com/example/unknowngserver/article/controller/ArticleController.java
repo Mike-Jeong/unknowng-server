@@ -2,6 +2,9 @@ package com.example.unknowngserver.article.controller;
 
 import com.example.unknowngserver.article.dto.*;
 import com.example.unknowngserver.article.service.ArticleService;
+import com.example.unknowngserver.common.dto.Keyword;
+import com.example.unknowngserver.common.dto.PageNumber;
+import com.example.unknowngserver.common.dto.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,44 +15,49 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/articles")
 public class ArticleController {
 
     private final ArticleService articleService;
 
-    @GetMapping("/articles/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ArticleDetailInfo> getArticle(@PathVariable("id") Long id) {
 
         ArticleDto articleDto = articleService.getArticle(id);
 
-        return ResponseEntity.ok(ArticleDetailInfo.fromArticleDto(articleDto));
+        ArticleDetailInfo articleDetailInfo = ArticleDetailInfo.fromArticleDto(articleDto);
+
+        return ResponseEntity.ok(articleDetailInfo);
     }
 
-    @GetMapping("/articles")
-    public ResponseEntity<List<ArticleBoardInfo>> getArticles(@RequestParam(defaultValue = "1", required = false) Integer page,
-                                                              @RequestParam(defaultValue = "", required = false) String keyword) {
-
-        page = (page < 1) ? 1 : page;
+    @GetMapping()
+    public ResponseEntity<List<ArticleBoardInfo>> getArticles(@ModelAttribute PageNumber page,
+                                                              @ModelAttribute Keyword keyword) {
 
         List<ArticleDto> articleDtoList = articleService.getArticles(page, keyword);
 
-        return ResponseEntity.ok(articleDtoList.stream()
+        List<ArticleBoardInfo> articleBoardInfoList = articleDtoList.stream()
                 .map(ArticleBoardInfo::fromArticleDto)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(articleBoardInfoList);
     }
 
-    @PostMapping("/articles")
-    public ResponseEntity<SubmitArticleResponse> submitArticle(
-            @RequestBody @Valid SubmitArticleRequest submitArticleRequest) {
+    @PostMapping()
+    public ResponseEntity<SubmitArticleResponse> submitArticle(@RequestBody @Valid SubmitArticleRequest submitArticleRequest) {
 
         ArticleDto articleDto = articleService.createArticle(submitArticleRequest);
 
-        return ResponseEntity.ok(SubmitArticleResponse.fromArticleDto(articleDto));
+        SubmitArticleResponse submitArticleResponse = SubmitArticleResponse.fromArticleDto(articleDto);
+
+        return ResponseEntity.ok(submitArticleResponse);
     }
 
-    @DeleteMapping("/articles")
-    public ResponseEntity<Boolean> deleteArticle(
-            @RequestBody @Valid DeleteArticleRequest deleteArticleRequest) {
+    @DeleteMapping()
+    public ResponseEntity<Response> deleteArticle(@RequestBody @Valid DeleteArticleRequest deleteArticleRequest) {
 
-        return ResponseEntity.ok(articleService.deleteArticle(deleteArticleRequest));
+        articleService.deleteArticle(deleteArticleRequest);
+
+        return ResponseEntity.ok().body(Response.ok());
     }
 }

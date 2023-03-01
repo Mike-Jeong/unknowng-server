@@ -5,6 +5,8 @@ import com.example.unknowngserver.comment.dto.CommentInfo;
 import com.example.unknowngserver.comment.dto.DeleteCommentRequest;
 import com.example.unknowngserver.comment.dto.SubmitCommentRequest;
 import com.example.unknowngserver.comment.service.CommentService;
+import com.example.unknowngserver.common.dto.PageNumber;
+import com.example.unknowngserver.common.dto.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,28 +23,30 @@ public class CommentController {
 
     @GetMapping("/articles/{articleId}/comments")
     public ResponseEntity<List<CommentInfo>> getComments(@PathVariable("articleId") Long articleId,
-                                                         @RequestParam(defaultValue = "1", required = false) Integer page) {
-
-        page = (page < 1) ? 1 : page;
+                                                         @ModelAttribute PageNumber page) {
 
         List<CommentDto> commentDtoList = commentService.getComments(articleId, page);
 
-        return ResponseEntity.ok(commentDtoList.stream()
+        List<CommentInfo> commentInfoList = commentDtoList.stream()
                 .map(CommentInfo::fromCommentDto)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(commentInfoList);
     }
 
     @PostMapping("/comments")
-    public ResponseEntity<Boolean> submitComments(
-            @RequestBody @Valid SubmitCommentRequest submitCommentRequest) {
+    public ResponseEntity<Response> submitComments(@RequestBody @Valid SubmitCommentRequest submitCommentRequest) {
 
-        return ResponseEntity.ok(commentService.createComment(submitCommentRequest));
+        commentService.createComment(submitCommentRequest);
+
+        return ResponseEntity.ok().body(Response.ok());
     }
 
     @DeleteMapping("/comments")
-    public ResponseEntity<Boolean> deleteComment(
-            @RequestBody @Valid DeleteCommentRequest deleteCommentRequest) {
+    public ResponseEntity<Response> deleteComment(@RequestBody @Valid DeleteCommentRequest deleteCommentRequest) {
 
-        return ResponseEntity.ok(commentService.deleteComment(deleteCommentRequest));
+        commentService.deleteComment(deleteCommentRequest);
+
+        return ResponseEntity.ok().body(Response.ok());
     }
 }
