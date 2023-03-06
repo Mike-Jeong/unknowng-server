@@ -1,19 +1,20 @@
 package com.example.unknowngserver.common.dto;
 
+import com.example.unknowngserver.common.type.ResponseType;
 import lombok.Getter;
 
 @Getter
 public class Response {
 
-    private String code;
-    private String message;
+    private final String code;
+    private final String message;
 
-    public Response (String code, String message) {
-        this.code = code;
-        this.message = message;
+    public Response(ResponseType responseType) {
+        this.code = responseType.getHttpStatus().toString();
+        this.message = responseType.getResponseMessage();
     }
 
     public static Response ok() {
-        return new Response("200", "성공");
+        return new Response(ResponseType.OK);
     }
 }

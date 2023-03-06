@@ -8,11 +8,10 @@ import com.example.unknowngserver.report.dto.ReportDto;
 import com.example.unknowngserver.report.dto.ReportRecordDto;
 import com.example.unknowngserver.report.dto.SubmitReportRequest;
 import com.example.unknowngserver.report.entity.Report;
-import com.example.unknowngserver.report.entity.ReportArticle;
-import com.example.unknowngserver.report.entity.ReportComment;
 import com.example.unknowngserver.report.entity.ReportRecord;
 import com.example.unknowngserver.report.repository.ReportRecordRepository;
 import com.example.unknowngserver.report.repository.ReportRepository;
+import com.example.unknowngserver.report.type.ContentType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,8 +30,6 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final ReportRecordRepository reportRecordRepository;
-    private final ReportArticleService reportArticleService;
-    private final ReportCommentService reportCommentService;
 
     @Transactional(readOnly = true)
     public List<ReportDto> getReports(PageNumber page) {
@@ -65,30 +62,18 @@ public class ReportService {
 
         Report report = findReport(reportId);
 
-        if ("ARTICLE".equals(report.getContentType())) {
-            return reportArticleService.getReportArticleDetail(report);
-        }
+        ReportContentService reportContentService = ContentType.getReportContentService(report.getContentType());
 
-        if ("COMMENT".equals(report.getContentType())) {
-            return reportCommentService.getReportCommentDetail(report);
-        }
+        return reportContentService.getReportDetail(report);
 
-        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
     }
 
     public void createReport(SubmitReportRequest submitReportRequest) {
 
-        if ("ARTICLE".equals(submitReportRequest.getContentType())) {
-            reportArticleService.createReportArticle(submitReportRequest);
-            return;
-        }
+        ReportContentService reportContentService = ContentType.getReportContentService(submitReportRequest.getContentType());
 
-        if ("COMMENT".equals(submitReportRequest.getContentType())) {
-            reportCommentService.createReportComment(submitReportRequest);
-            return;
-        }
+        reportContentService.createReport(submitReportRequest);
 
-        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
     }
 
     @Transactional
@@ -96,17 +81,10 @@ public class ReportService {
 
         Report report = findReport(reportId);
 
-        if ("ARTICLE".equals(report.getContentType())) {
-            reportArticleService.deleteReportArticle((ReportArticle) report);
-            return;
-        }
+        ReportContentService reportContentService = ContentType.getReportContentService(report.getContentType());
 
-        if ("COMMENT".equals(report.getContentType())) {
-            reportCommentService.deleteReportComment((ReportComment) report);
-            return;
-        }
+        reportContentService.deleteReport(report);
 
-        throw new ReportException(ErrorCode.REPORT_DETAIL_CONTENT_TYPE_NOT_SUPPORTED);
     }
 
     private Report findReport(Long reportId) {

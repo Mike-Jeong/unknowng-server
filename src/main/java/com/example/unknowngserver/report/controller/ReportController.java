@@ -19,7 +19,7 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<ReportBoardInfo>> getReports(@ModelAttribute PageNumber page) {
 
         List<ReportDto> reportDtoList = reportService.getReports(page);
@@ -31,7 +31,7 @@ public class ReportController {
         return ResponseEntity.ok(reportBoardInfoList);
     }
 
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<Response> submitReport(@RequestBody @Valid SubmitReportRequest submitReportRequest) {
 
         reportService.createReport(submitReportRequest);

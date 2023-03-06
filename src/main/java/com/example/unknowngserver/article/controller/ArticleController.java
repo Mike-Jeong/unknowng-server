@@ -30,7 +30,7 @@ public class ArticleController {
         return ResponseEntity.ok(articleDetailInfo);
     }
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<List<ArticleBoardInfo>> getArticles(@ModelAttribute PageNumber page,
                                                               @ModelAttribute Keyword keyword) {
 
@@ -43,7 +43,7 @@ public class ArticleController {
         return ResponseEntity.ok(articleBoardInfoList);
     }
 
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<SubmitArticleResponse> submitArticle(@RequestBody @Valid SubmitArticleRequest submitArticleRequest) {
 
         ArticleDto articleDto = articleService.createArticle(submitArticleRequest);
@@ -53,7 +53,7 @@ public class ArticleController {
         return ResponseEntity.ok(submitArticleResponse);
     }
 
-    @DeleteMapping()
+    @DeleteMapping
     public ResponseEntity<Response> deleteArticle(@RequestBody @Valid DeleteArticleRequest deleteArticleRequest) {
 
         articleService.deleteArticle(deleteArticleRequest);
