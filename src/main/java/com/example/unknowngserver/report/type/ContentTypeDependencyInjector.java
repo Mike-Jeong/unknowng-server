@@ -22,7 +22,7 @@ public class ContentTypeDependencyInjector {
                 type.addReportContentService(reportArticleService);
             }
 
-            if (type.equals(ContentType.ARTICLE)) {
+            if (type.equals(ContentType.COMMENT)) {
                 type.addReportContentService(reportCommentService);
             }
         }
