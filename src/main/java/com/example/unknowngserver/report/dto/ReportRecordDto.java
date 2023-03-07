@@ -11,15 +11,21 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ReportRecordDto {
     private Long id;
     private ReportType reportType;
     private String memo;
     private LocalDateTime reportedDt;
 
-    public static ReportRecordDto fromEntity(ReportRecord reportRecord) {
+    @Builder
+    public ReportRecordDto(Long id, ReportType reportType, String memo, LocalDateTime reportedDt) {
+        this.id = id;
+        this.reportType = reportType;
+        this.memo = memo;
+        this.reportedDt = reportedDt;
+    }
+
+    public static ReportRecordDto fromReportRecord(ReportRecord reportRecord) {
         return ReportRecordDto.builder()
                 .id(reportRecord.getId())
                 .reportType(reportRecord.getReportType())

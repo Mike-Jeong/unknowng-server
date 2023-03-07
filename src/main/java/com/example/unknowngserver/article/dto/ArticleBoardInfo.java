@@ -9,13 +9,19 @@ import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ArticleBoardInfo {
     private Long id;
     private String author;
     private String title;
     private LocalDate createDate;
+
+    @Builder
+    public ArticleBoardInfo(Long id, String author, String title, LocalDate createDate) {
+        this.id = id;
+        this.author = author;
+        this.title = title;
+        this.createDate = createDate;
+    }
 
     public static ArticleBoardInfo fromArticleDto(ArticleDto articleDto) {
         return ArticleBoardInfo.builder()

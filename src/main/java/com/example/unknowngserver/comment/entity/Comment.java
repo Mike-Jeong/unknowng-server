@@ -9,8 +9,6 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Getter
 @Entity
 @SQLDelete(sql = "UPDATE comment SET deleted = true, deleted_at = current_timestamp WHERE id = ? ")
@@ -24,10 +22,21 @@ public class Comment {
     private String password;
     private LocalDateTime registeredAt;
 
-    @Builder.Default
-    private boolean deleted = false;
+    private boolean deleted;
     private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Article article;
+
+    @Builder
+    public Comment(Long id, String content, String author, String password, LocalDateTime registeredAt, boolean deleted, LocalDateTime deletedAt, Article article) {
+        this.id = id;
+        this.content = content;
+        this.author = author;
+        this.password = password;
+        this.registeredAt = registeredAt;
+        this.deleted = deleted;
+        this.deletedAt = deletedAt;
+        this.article = article;
+    }
 }

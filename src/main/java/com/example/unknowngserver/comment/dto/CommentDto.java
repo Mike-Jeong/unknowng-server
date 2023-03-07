@@ -10,15 +10,21 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class CommentDto {
     private Long id;
     private String content;
     private String author;
     private LocalDateTime registeredAt;
 
-    public static CommentDto fromEntity(Comment comment) {
+    @Builder
+    public CommentDto(Long id, String content, String author, LocalDateTime registeredAt) {
+        this.id = id;
+        this.content = content;
+        this.author = author;
+        this.registeredAt = registeredAt;
+    }
+
+    public static CommentDto fromComment(Comment comment) {
         return CommentDto.builder()
                 .id(comment.getId())
                 .content(comment.getContent())

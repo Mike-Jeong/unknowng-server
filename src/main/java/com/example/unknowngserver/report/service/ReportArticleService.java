@@ -20,28 +20,15 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class ReportArticleService {
+public class ReportArticleService implements ReportContentService {
 
     private final ReportArticleRepository reportArticleRepository;
     private final ReportRecordRepository reportRecordRepository;
     private final ArticleRepository articleRepository;
 
-    public ReportDetailDto getReportArticleDetail(Report report) {
-
-        ReportArticle reportArticle = (ReportArticle) report;
-
-        return ReportDetailDto.builder()
-                .reportId(reportArticle.getId())
-                .reportedContentType(reportArticle.getContentType())
-                .targetId(reportArticle.getArticle().getId())
-                .targetContent(reportArticle.getArticle().getContent())
-                .reportedCount(reportArticle.getReportedCount())
-                .firstReportedAt(reportArticle.getFirstReportedAt())
-                .build();
-    }
-
+    @Override
     @Transactional
-    public boolean createReportArticle(SubmitReportRequest submitReportRequest) {
+    public void createReport(SubmitReportRequest submitReportRequest) {
 
         Article article = findArticle(submitReportRequest.getContentId());
         LocalDateTime currentTimeStamp = LocalDateTime.now();
@@ -61,16 +48,32 @@ public class ReportArticleService {
 
         reportArticle.updateReportedCount(reportRecordRepository.countReportRecordByReport(reportArticle));
 
-        return true;
     }
 
+    @Override
     @Transactional
-    public boolean deleteReportArticle(ReportArticle report) {
+    public void deleteReport(Report report) {
 
-        articleRepository.delete(report.getArticle());
-        reportArticleRepository.delete(report);
+        ReportArticle reportArticle = (ReportArticle) report;
 
-        return true;
+        articleRepository.delete(reportArticle.getArticle());
+        reportArticleRepository.delete(reportArticle);
+    }
+
+    @Override
+    public ReportDetailDto getReportDetail(Report report) {
+
+        ReportArticle reportArticle = (ReportArticle) report;
+
+        return ReportDetailDto.builder()
+                .reportId(reportArticle.getId())
+                .reportedContentType(reportArticle.getContentType())
+                .targetId(reportArticle.getArticle().getId())
+                .targetContent(reportArticle.getArticle().getContent())
+                .reportedCount(reportArticle.getReportedCount())
+                .firstReportedAt(reportArticle.getFirstReportedAt())
+                .build();
+
     }
 
     private Article findArticle(Long articleId) {

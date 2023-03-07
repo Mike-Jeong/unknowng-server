@@ -6,4 +6,3 @@ public enum ReportType {
     ILLEGAL_ADVERTISING,
     OTHER
 }
-

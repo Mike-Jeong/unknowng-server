@@ -1,7 +1,5 @@
 package com.example.unknowngserver.report.dto;
 
-import com.example.unknowngserver.report.entity.ReportArticle;
-import com.example.unknowngserver.report.entity.ReportComment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,8 +9,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ReportDetailDto {
     private Long reportId;
     private String reportedContentType;
@@ -20,5 +16,15 @@ public class ReportDetailDto {
     private String targetContent;
     private int reportedCount;
     private LocalDateTime firstReportedAt;
+
+    @Builder
+    public ReportDetailDto(Long reportId, String reportedContentType, Long targetId, String targetContent, int reportedCount, LocalDateTime firstReportedAt) {
+        this.reportId = reportId;
+        this.reportedContentType = reportedContentType;
+        this.targetId = targetId;
+        this.targetContent = targetContent;
+        this.reportedCount = reportedCount;
+        this.firstReportedAt = firstReportedAt;
+    }
 }
 

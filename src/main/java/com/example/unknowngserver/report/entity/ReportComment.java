@@ -13,7 +13,6 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @SuperBuilder
 @Getter
 @Entity

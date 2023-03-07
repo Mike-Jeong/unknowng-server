@@ -1,5 +1,7 @@
 package com.example.unknowngserver.report.controller;
 
+import com.example.unknowngserver.common.dto.PageNumber;
+import com.example.unknowngserver.common.dto.Response;
 import com.example.unknowngserver.report.dto.*;
 import com.example.unknowngserver.report.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -12,52 +14,59 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/reports")
 public class ReportController {
 
     private final ReportService reportService;
 
-    @GetMapping("/reports")
-    public ResponseEntity<List<ReportBoardInfo>> getReports(@RequestParam(defaultValue = "1", required = false) Integer page) {
-
-        page = (page < 1) ? 1 : page;
+    @GetMapping
+    public ResponseEntity<List<ReportBoardInfo>> getReports(@ModelAttribute PageNumber page) {
 
         List<ReportDto> reportDtoList = reportService.getReports(page);
 
-        return ResponseEntity.ok(reportDtoList.stream()
+        List<ReportBoardInfo> reportBoardInfoList = reportDtoList.stream()
                 .map(ReportBoardInfo::fromReportDto)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(reportBoardInfoList);
     }
 
-    @PostMapping("/reports")
-    public ResponseEntity<Boolean> submitReport(
-            @RequestBody @Valid SubmitReportRequest submitReportRequest) {
-        return ResponseEntity.ok(reportService.createReport(submitReportRequest));
+    @PostMapping
+    public ResponseEntity<Response> submitReport(@RequestBody @Valid SubmitReportRequest submitReportRequest) {
+
+        reportService.createReport(submitReportRequest);
+
+        return ResponseEntity.ok().body(Response.ok());
     }
 
-    @GetMapping("/reports/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ReportDetailInfo> getReport(@PathVariable("id") Long id) {
 
         ReportDetailDto reportDetailDto = reportService.getReportDetail(id);
 
-        return ResponseEntity.ok(ReportDetailInfo.fromReportDetailDto(reportDetailDto));
+        ReportDetailInfo reportDetailInfo = ReportDetailInfo.fromReportDetailDto(reportDetailDto);
+
+        return ResponseEntity.ok(reportDetailInfo);
     }
 
-    @DeleteMapping("/reports/{id}")
-    public ResponseEntity<Boolean> deleteReport(@PathVariable("id") Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Response> deleteReport(@PathVariable("id") Long id) {
 
-        return ResponseEntity.ok(reportService.deleteReport(id));
+        reportService.deleteReport(id);
+
+        return ResponseEntity.ok().body(Response.ok());
     }
 
-    @GetMapping("/reports/{reportId}/report-records")
+    @GetMapping("/{reportId}/report-records")
     public ResponseEntity<List<ReportRecordBoardInfo>> getReportRecords(@PathVariable("reportId") Long reportId,
-                                                                        @RequestParam(defaultValue = "1", required = false) Integer page) {
-
-        page = (page < 1) ? 1 : page;
+                                                                        @ModelAttribute PageNumber page) {
 
         List<ReportRecordDto> reportRecordDtoList = reportService.getReportRecords(reportId, page);
 
-        return ResponseEntity.ok(reportRecordDtoList.stream()
+        List<ReportRecordBoardInfo> reportRecordBoardInfoList = reportRecordDtoList.stream()
                 .map(ReportRecordBoardInfo::fromReportRecordDto)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(reportRecordBoardInfoList);
     }
 }

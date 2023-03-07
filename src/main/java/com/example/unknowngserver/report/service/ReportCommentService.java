@@ -20,28 +20,15 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class ReportCommentService {
+public class ReportCommentService implements ReportContentService {
 
     private final ReportCommentRepository reportCommentRepository;
     private final ReportRecordRepository reportRecordRepository;
     private final CommentRepository commentRepository;
 
-    public ReportDetailDto getReportCommentDetail(Report report) {
-
-        ReportComment reportComment = (ReportComment) report;
-
-        return ReportDetailDto.builder()
-                .reportId(reportComment.getId())
-                .reportedContentType(reportComment.getContentType())
-                .targetId(reportComment.getComment().getId())
-                .targetContent(reportComment.getComment().getContent())
-                .reportedCount(reportComment.getReportedCount())
-                .firstReportedAt(reportComment.getFirstReportedAt())
-                .build();
-    }
-
+    @Override
     @Transactional
-    public boolean createReportComment(SubmitReportRequest submitReportRequest) {
+    public void createReport(SubmitReportRequest submitReportRequest) {
 
         Comment comment = findComment(submitReportRequest.getContentId());
         LocalDateTime currentTimeStamp = LocalDateTime.now();
@@ -61,16 +48,33 @@ public class ReportCommentService {
 
         reportComment.updateReportedCount(reportRecordRepository.countReportRecordByReport(reportComment));
 
-        return true;
     }
 
+    @Override
     @Transactional
-    public boolean deleteReportComment(ReportComment report) {
+    public void deleteReport(Report report) {
 
-        commentRepository.delete(report.getComment());
-        reportCommentRepository.delete(report);
+        ReportComment reportComment = (ReportComment) report;
 
-        return true;
+        commentRepository.delete(reportComment.getComment());
+        reportCommentRepository.delete(reportComment);
+
+    }
+
+    @Override
+    public ReportDetailDto getReportDetail(Report report) {
+
+        ReportComment reportComment = (ReportComment) report;
+
+        return ReportDetailDto.builder()
+                .reportId(reportComment.getId())
+                .reportedContentType(reportComment.getContentType())
+                .targetId(reportComment.getComment().getId())
+                .targetContent(reportComment.getComment().getContent())
+                .reportedCount(reportComment.getReportedCount())
+                .firstReportedAt(reportComment.getFirstReportedAt())
+                .build();
+
     }
 
     private Comment findComment(Long commentId) {
