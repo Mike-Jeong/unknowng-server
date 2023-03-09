@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReportService {
 
     private static final int PAGE_SIZE = 10;
@@ -31,7 +32,6 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final ReportRecordRepository reportRecordRepository;
 
-    @Transactional(readOnly = true)
     public List<ReportDto> getReports(PageNumber page) {
 
         PageRequest pageRequest = PageRequest.of(page.getPage(), PAGE_SIZE, Sort.by("reportedCount").descending());
@@ -43,7 +43,6 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public List<ReportRecordDto> getReportRecords(Long reportId, PageNumber page) {
 
         Report report = findReport(reportId);
@@ -57,7 +56,6 @@ public class ReportService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public ReportDetailDto getReportDetail(Long reportId) {
 
         Report report = findReport(reportId);
