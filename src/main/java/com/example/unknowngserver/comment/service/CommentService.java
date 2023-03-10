@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CommentService {
 
     private static final int PAGE_SIZE = 10;
@@ -35,7 +36,6 @@ public class CommentService {
     private final ReportCommentRepository reportCommentRepository;
     private final PasswordUtil passwordUtil;
 
-    @Transactional(readOnly = true)
     public List<CommentDto> getComments(Long articleId, PageNumber page) {
 
         Article article = findArticle(articleId);

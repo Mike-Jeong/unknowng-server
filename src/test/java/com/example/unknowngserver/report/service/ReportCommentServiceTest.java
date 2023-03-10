@@ -10,8 +10,7 @@ import com.example.unknowngserver.report.entity.ReportComment;
 import com.example.unknowngserver.report.entity.ReportRecord;
 import com.example.unknowngserver.report.repository.ReportCommentRepository;
 import com.example.unknowngserver.report.repository.ReportRecordRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -27,157 +26,112 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-@ExtendWith(MockitoExtension.class) 
-class ReportCommentServiceTest { 
+@ExtendWith(MockitoExtension.class)
+class ReportCommentServiceTest {
 
-    @Mock 
-    private ReportCommentRepository reportCommentRepository; 
-    @Mock 
-    private ReportRecordRepository reportRecordRepository; 
-    @Mock 
-    private CommentRepository commentRepository; 
+    @Mock
+    private ReportCommentRepository reportCommentRepository;
+    @Mock
+    private ReportRecordRepository reportRecordRepository;
+    @Mock
+    private CommentRepository commentRepository;
 
-    @InjectMocks 
-    private ReportCommentService reportCommentService; 
+    @InjectMocks
+    private ReportCommentService reportCommentService;
 
-    @Test 
-    @DisplayName("신고 상세 내용 조회 API 서비스 테스트 성공 - 댓글 신고") 
-    void getReportCommentDetail() { 
+    Comment comment;
+    ReportComment report;
 
-        //given
-        Comment comment1 = Comment.builder() 
-                .id(1L) 
-                .content("comment test 1") 
-                .author("ctest1") 
-                .password("1234") 
-                .registeredAt(LocalDateTime.now()) 
-                .build(); 
+    @BeforeEach
+    public void beforeEach() {
+        comment = Comment.builder()
+                .id(1L)
+                .content("comment test 1")
+                .author("ctest1")
+                .password("1234")
+                .registeredAt(LocalDateTime.now())
+                .build();
 
-        ReportComment report = ReportComment.builder() 
-                .id(1L) 
-                .firstReportedAt(LocalDateTime.now()) 
-                .contentType("COMMENT") 
-                .reportedCount(1) 
-                .comment(comment1) 
-                .build(); 
+        report = ReportComment.builder()
+                .id(1L)
+                .firstReportedAt(LocalDateTime.now())
+                .contentType("COMMENT")
+                .reportedCount(1)
+                .comment(comment)
+                .build();
+    }
 
-        //when
-        ReportDetailDto reportDetailDto = reportCommentService.getReportCommentDetail(report); 
- 
-        //then
-        assertEquals(1L, reportDetailDto.getReportId()); 
-        assertEquals("COMMENT", reportDetailDto.getReportedContentType()); 
-        assertEquals(1, reportDetailDto.getReportedCount()); 
-        assertEquals(1L, reportDetailDto.getTargetId()); 
-        assertEquals("comment test 1", reportDetailDto.getTargetContent()); 
-
-    } 
-
-    @Test 
-    @DisplayName("신고 등록 API 서비스 테스트 성공 - 댓글 신고 (기존 댓글에 신고내역이 없을때)") 
-    void createReportComment() { 
+    @Test
+    @DisplayName("신고 상세 내용 조회 요청시, 신고 상세 내용을 보여준다.")
+    void getReportCommentDetail() {
 
         //given
-        Comment comment1 = Comment.builder() 
-                .id(1L) 
-                .content("comment test 1") 
-                .author("ctest1") 
-                .password("1234") 
-                .registeredAt(LocalDateTime.now()) 
-                .build(); 
-
-        ReportComment report = ReportComment.builder() 
-                .id(1L) 
-                .firstReportedAt(LocalDateTime.now()) 
-                .contentType("COMMENT") 
-                .reportedCount(1) 
-                .comment(comment1) 
-                .build(); 
-
-        given(commentRepository.findById(1L)).willReturn(Optional.of(comment1)); 
-        given(reportCommentRepository.findByComment(comment1)).willReturn(Optional.empty()); 
-        given(reportCommentRepository.save(any())).willReturn(report); 
-
-        ArgumentCaptor<ReportRecord> reportRecordArgumentCaptor = ArgumentCaptor.forClass(ReportRecord.class); 
-
         //when
-        boolean result = reportCommentService.createReportComment(new SubmitReportRequest("COMMET", 1L, "INSULT", "test memo")); 
+        ReportDetailDto reportDetailDto = reportCommentService.getReportDetail(report);
 
         //then
-        verify(reportCommentRepository).findByComment(any()); 
-        verify(reportCommentRepository).save(any());  
-        verify(reportRecordRepository).save(reportRecordArgumentCaptor.capture()); 
-        assertTrue(result); 
-        assertEquals(report, reportRecordArgumentCaptor.getValue().getReport()); 
+        assertEquals(1L, reportDetailDto.getReportId());
+        assertEquals("COMMENT", reportDetailDto.getReportedContentType());
+        assertEquals(1, reportDetailDto.getReportedCount());
+        assertEquals(1L, reportDetailDto.getTargetId());
+        assertEquals("comment test 1", reportDetailDto.getTargetContent());
 
     }
 
-    @Test 
-    @DisplayName("신고 등록 API 서비스 테스트 성공 - 댓글 신고 (기존 댓글에 신고내역이 없을때)") 
-    void createReportComment_CommentAlreadyReportedBefore() { 
- 
-        //given
-        Comment comment1 = Comment.builder() 
-                .id(1L) 
-                .content("comment test 1") 
-                .author("ctest1") 
-                .password("1234") 
-                .registeredAt(LocalDateTime.now()) 
-                .build(); 
-
-        ReportComment report = ReportComment.builder() 
-                .id(1L) 
-                .firstReportedAt(LocalDateTime.now()) 
-                .contentType("COMMENT") 
-                .reportedCount(1) 
-                .comment(comment1) 
-                .build(); 
-
-        given(commentRepository.findById(1L)).willReturn(Optional.of(comment1)); 
-        given(reportCommentRepository.findByComment(comment1)).willReturn(Optional.of(report)); 
-
-        ArgumentCaptor<ReportRecord> reportRecordArgumentCaptor = ArgumentCaptor.forClass(ReportRecord.class); 
-
-        //when
-        boolean result = reportCommentService.createReportComment(new SubmitReportRequest("COMMET", 1L, "INSULT", "test memo")); 
-
-        //then
-        verify(reportCommentRepository).findByComment(any()); 
-        verify(reportCommentRepository, never()).save(any()); 
-        verify(reportRecordRepository).save(reportRecordArgumentCaptor.capture()); 
-        assertTrue(result); 
-        assertEquals(report, reportRecordArgumentCaptor.getValue().getReport()); 
- 
-    } 
-
-    @Test 
-    @DisplayName("신고 삭제 API 서비스 테스트 성공 - 댓글 신고") 
-    void deleteReportComment() { 
+    @Test
+    @DisplayName("신고 등록 요청시, 기존 신고 내용이 없을 경우 새 신고를 등록한다.")
+    void createReportComment() {
 
         //given
-        Comment comment1 = Comment.builder() 
-                .id(1L) 
-                .content("comment test 1") 
-                .author("ctest1") 
-                .password("1234") 
-                .registeredAt(LocalDateTime.now()) 
-                .build(); 
+        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(reportCommentRepository.findByComment(comment)).willReturn(Optional.empty());
+        given(reportCommentRepository.save(any())).willReturn(report);
 
-        ReportComment report = ReportComment.builder() 
-                .id(1L) 
-                .firstReportedAt(LocalDateTime.now()) 
-                .contentType("COMMENT") 
-                .reportedCount(1) 
-                .comment(comment1) 
-                .build(); 
+        ArgumentCaptor<ReportRecord> reportRecordArgumentCaptor = ArgumentCaptor.forClass(ReportRecord.class);
 
         //when
-        boolean result = reportCommentService.deleteReportComment(report); 
+        reportCommentService.createReport(new SubmitReportRequest("COMMENT", 1L, "INSULT", "test memo"));
 
         //then
-        verify(commentRepository).delete(comment1); 
-        verify(reportCommentRepository).delete(report); 
-        assertTrue(result); 
+        verify(reportCommentRepository).findByComment(any());
+        verify(reportCommentRepository).save(any());
+        verify(reportRecordRepository).save(reportRecordArgumentCaptor.capture());
+        assertEquals(report, reportRecordArgumentCaptor.getValue().getReport());
 
-    } 
+    }
+
+    @Test
+    @DisplayName("신고 등록 요청시, 기존 신고 내용이 있을 경우 신고를 업데이트한다.")
+    void createReportComment_CommentAlreadyReportedBefore() {
+
+        //given
+        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(reportCommentRepository.findByComment(comment)).willReturn(Optional.of(report));
+
+        ArgumentCaptor<ReportRecord> reportRecordArgumentCaptor = ArgumentCaptor.forClass(ReportRecord.class);
+
+        //when
+        reportCommentService.createReport(new SubmitReportRequest("COMMENT", 1L, "INSULT", "test memo"));
+
+        //then
+        verify(reportCommentRepository).findByComment(any());
+        verify(reportCommentRepository, never()).save(any());
+        verify(reportRecordRepository).save(reportRecordArgumentCaptor.capture());
+        assertEquals(report, reportRecordArgumentCaptor.getValue().getReport());
+
+    }
+
+    @Test
+    @DisplayName("신고 삭제 요청시, 신고를 삭제한다.")
+    void deleteReportComment() {
+
+        //given
+        //when
+        reportCommentService.deleteReport(report);
+
+        //then
+        verify(commentRepository).delete(comment);
+        verify(reportCommentRepository).delete(report);
+
+    }
 } 

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ArticleService {
 
     private static final int PAGE_SIZE = 10;
@@ -33,7 +34,6 @@ public class ArticleService {
     private final ReportArticleRepository reportArticleRepository;
     private final PasswordUtil passwordUtil;
 
-    @Transactional(readOnly = true)
     public ArticleDto getArticle(Long id) {
 
         Article article = findArticle(id);
@@ -43,7 +43,6 @@ public class ArticleService {
         return articleDto;
     }
 
-    @Transactional(readOnly = true)
     public List<ArticleDto> getArticles(PageNumber page, Keyword keyword) {
 
         PageRequest pageRequest = PageRequest.of(page.getPage(), PAGE_SIZE, Sort.by("id").descending());
@@ -93,4 +92,5 @@ public class ArticleService {
         return StringUtils.isBlank(keyword) ? articleRepository.findAll(pageRequest)
                 : articleRepository.findByTitleContains(pageRequest, keyword);
     }
+
 }

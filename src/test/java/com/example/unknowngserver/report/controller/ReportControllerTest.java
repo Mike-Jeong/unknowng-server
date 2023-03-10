@@ -7,8 +7,10 @@ import com.example.unknowngserver.report.dto.SubmitReportRequest;
 import com.example.unknowngserver.report.service.ReportService;
 import com.example.unknowngserver.report.type.ReportType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -28,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(value = ReportController.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithMockUser
 class ReportControllerTest {
 
@@ -40,12 +43,22 @@ class ReportControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    @DisplayName("신고 리스트 조회 API 컨트롤러 테스트 성공")
-    void getReports() throws Exception {
+    ReportDetailDto reportDetailDto;
 
-        //given
-        List<ReportDto> reportDtoList = new ArrayList<>();
+    List<ReportDto> reportDtoList = new ArrayList<>();
+    List<ReportRecordDto> reportRecordDtoList = new ArrayList<>();
+
+    @BeforeAll
+    public void beforeAll() {
+
+        reportDetailDto = ReportDetailDto.builder()
+                .reportId(1L)
+                .reportedContentType("ARTICLE")
+                .targetId(1L)
+                .targetContent("test")
+                .reportedCount(1)
+                .firstReportedAt(LocalDateTime.now())
+                .build();
 
         reportDtoList.add(ReportDto.builder()
                 .reportId(1L)
@@ -59,14 +72,27 @@ class ReportControllerTest {
                 .firstReportedAt(LocalDateTime.now())
                 .reportedCount(2)
                 .build());
-        reportDtoList.add(ReportDto.builder()
-                .reportId(3L)
-                .reportedContentType("ARTICLE")
-                .firstReportedAt(LocalDateTime.now())
-                .reportedCount(3)
-                .build());
 
-        given(reportService.getReports(anyInt()))
+        reportRecordDtoList.add(ReportRecordDto.builder()
+                .id(1L)
+                .reportType(ReportType.INSULT)
+                .memo("test")
+                .reportedDt(LocalDateTime.now())
+                .build());
+        reportRecordDtoList.add(ReportRecordDto.builder()
+                .id(2L)
+                .reportType(ReportType.SEXUAL)
+                .memo("test")
+                .reportedDt(LocalDateTime.now())
+                .build());
+    }
+
+    @Test
+    @DisplayName("신고 리스트 조회 API 컨트롤러 테스트 성공")
+    void getReports() throws Exception {
+
+        //given
+        given(reportService.getReports(any()))
                 .willReturn(reportDtoList);
 
         //when
@@ -79,9 +105,6 @@ class ReportControllerTest {
                 .andExpect(jsonPath("$[1].reportId").value("2"))
                 .andExpect(jsonPath("$[1].reportedContentType").value("COMMENT"))
                 .andExpect(jsonPath("$[1].reportedCount").value("2"))
-                .andExpect(jsonPath("$[2].reportId").value("3"))
-                .andExpect(jsonPath("$[2].reportedContentType").value("ARTICLE"))
-                .andExpect(jsonPath("$[2].reportedCount").value("3"))
                 .andDo(print());
 
     }
@@ -91,9 +114,6 @@ class ReportControllerTest {
     void submitReport() throws Exception {
 
         //given
-        given(reportService.createReport(any()))
-                .willReturn(true);
-
         //when
         //then
         mockMvc.perform(post("/reports")
@@ -103,7 +123,6 @@ class ReportControllerTest {
                                 new SubmitReportRequest("ARTICLE", 1L, "INSULT", "test")
                         )))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"))
                 .andDo(print());
     }
 
@@ -112,15 +131,6 @@ class ReportControllerTest {
     void getReport() throws Exception {
 
         //given
-        ReportDetailDto reportDetailDto = ReportDetailDto.builder()
-                .reportId(1L)
-                .reportedContentType("ARTICLE")
-                .targetId(1L)
-                .targetContent("test")
-                .reportedCount(1)
-                .firstReportedAt(LocalDateTime.now())
-                .build();
-
         given(reportService.getReportDetail(anyLong()))
                 .willReturn(reportDetailDto);
 
@@ -142,15 +152,11 @@ class ReportControllerTest {
     void deleteReport() throws Exception {
 
         //given
-        given(reportService.deleteReport(anyLong()))
-                .willReturn(true);
-
         //when
         //then
         mockMvc.perform(delete("/reports/1")
                         .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"))
                 .andDo(print());
 
     }
@@ -160,28 +166,7 @@ class ReportControllerTest {
     void getReportRecords() throws Exception {
 
         //given
-        List<ReportRecordDto> reportRecordDtoList = new ArrayList<>();
-
-        reportRecordDtoList.add(ReportRecordDto.builder()
-                .id(1L)
-                .reportType(ReportType.INSULT)
-                .memo("test")
-                .reportedDt(LocalDateTime.now())
-                .build());
-        reportRecordDtoList.add(ReportRecordDto.builder()
-                .id(2L)
-                .reportType(ReportType.SEXUAL)
-                .memo("test")
-                .reportedDt(LocalDateTime.now())
-                .build());
-        reportRecordDtoList.add(ReportRecordDto.builder()
-                .id(3L)
-                .reportType(ReportType.ILLEGAL_ADVERTISING)
-                .memo("test")
-                .reportedDt(LocalDateTime.now())
-                .build());
-
-        given(reportService.getReportRecords(anyLong(), anyInt()))
+        given(reportService.getReportRecords(anyLong(), any()))
                 .willReturn(reportRecordDtoList);
 
         //when
@@ -192,8 +177,6 @@ class ReportControllerTest {
                 .andExpect(jsonPath("$[0].memo").value("test"))
                 .andExpect(jsonPath("$[1].reportType").value("SEXUAL"))
                 .andExpect(jsonPath("$[1].memo").value("test"))
-                .andExpect(jsonPath("$[2].reportType").value("ILLEGAL_ADVERTISING"))
-                .andExpect(jsonPath("$[2].memo").value("test"))
                 .andDo(print());
 
     }

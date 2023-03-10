@@ -19,11 +19,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = CommentController.class)
 @WithMockUser
@@ -43,6 +45,7 @@ class CommentControllerTest {
     void getComments() throws Exception {
 
         //given
+
         List<CommentDto> commentDtoList = new ArrayList<>();
 
         commentDtoList.add(CommentDto.builder()
@@ -64,7 +67,8 @@ class CommentControllerTest {
                 .registeredAt(LocalDateTime.now())
                 .build());
 
-        given(commentService.getComments(anyLong(), anyInt()))
+
+        given(commentService.getComments(anyLong(), any()))
                 .willReturn(commentDtoList);
 
         //when
@@ -89,9 +93,6 @@ class CommentControllerTest {
     void submitComments() throws Exception {
 
         //given
-        given(commentService.createComment(any()))
-                .willReturn(true);
-
         //when
         //then
         mockMvc.perform(post("/comments")
@@ -101,7 +102,6 @@ class CommentControllerTest {
                                 new SubmitCommentRequest(1L, "test", "test", "test")
                         )))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"))
                 .andDo(print());
 
     }
@@ -111,9 +111,6 @@ class CommentControllerTest {
     void deleteComment() throws Exception {
 
         //given
-        given(commentService.deleteComment(any()))
-                .willReturn(true);
-
         //when
         //then
         mockMvc.perform(delete("/comments")
@@ -123,7 +120,6 @@ class CommentControllerTest {
                                 new DeleteCommentRequest(1L, "1234")
                         )))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"))
                 .andDo(print());
 
     }

@@ -5,8 +5,10 @@ import com.example.unknowngserver.article.dto.DeleteArticleRequest;
 import com.example.unknowngserver.article.dto.SubmitArticleRequest;
 import com.example.unknowngserver.article.service.ArticleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -19,13 +21,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = ArticleController.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithMockUser
 class ArticleControllerTest {
 
@@ -38,19 +43,28 @@ class ArticleControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    ArticleDto articleDto;
+
+    @BeforeAll
+    public void beforeAll() {
+
+        articleDto = ArticleDto.builder()
+                .id(1L)
+                .title("test 1")
+                .content("test 1 content")
+                .author("Min1")
+                .registeredAt(LocalDateTime.now())
+                .build();
+    }
+
     @Test
     @DisplayName("게시글 조회 API 컨트롤러 테스트 성공")
     void getArticle() throws Exception {
 
         //given
         given(articleService.getArticle(anyLong()))
-                .willReturn(ArticleDto.builder()
-                        .id(1L)
-                        .title("test 1")
-                        .content("test 1 content")
-                        .author("Min1")
-                        .registeredAt(LocalDateTime.now())
-                        .build());
+                .willReturn(articleDto);
+
         //when
         //then
         mockMvc.perform(get("/articles/1"))
@@ -70,29 +84,18 @@ class ArticleControllerTest {
         //given
         List<ArticleDto> articleDtoList = new ArrayList<>();
 
-        articleDtoList.add(ArticleDto.builder()
-                .id(1L)
-                .title("test 1")
-                .content("test 1 content")
-                .author("Min1")
-                .registeredAt(LocalDateTime.now())
-                .build());
-        articleDtoList.add(ArticleDto.builder()
+        ArticleDto articleDto2 = ArticleDto.builder()
                 .id(2L)
                 .title("test 2")
                 .content("test 2 content")
                 .author("Min2")
                 .registeredAt(LocalDateTime.now())
-                .build());
-        articleDtoList.add(ArticleDto.builder()
-                .id(3L)
-                .title("test 3")
-                .content("test 3 content")
-                .author("Min3")
-                .registeredAt(LocalDateTime.now())
-                .build());
+                .build();
 
-        given(articleService.getArticles(anyInt(), anyString()))
+        articleDtoList.add(articleDto);
+        articleDtoList.add(articleDto2);
+
+        given(articleService.getArticles(any(), any()))
                 .willReturn(articleDtoList);
 
         //when
@@ -105,9 +108,6 @@ class ArticleControllerTest {
                 .andExpect(jsonPath("$[1].id").value("2"))
                 .andExpect(jsonPath("$[1].title").value("test 2"))
                 .andExpect(jsonPath("$[1].author").value("Min2"))
-                .andExpect(jsonPath("$[2].id").value("3"))
-                .andExpect(jsonPath("$[2].title").value("test 3"))
-                .andExpect(jsonPath("$[2].author").value("Min3"))
                 .andDo(print());
 
     }
@@ -118,13 +118,7 @@ class ArticleControllerTest {
 
         //given
         given(articleService.createArticle(any()))
-                .willReturn(ArticleDto.builder()
-                        .id(1L)
-                        .title("test 1")
-                        .content("test 1 content")
-                        .author("Min1")
-                        .registeredAt(LocalDateTime.now())
-                        .build());
+                .willReturn(articleDto);
 
         //when
         //then
@@ -145,9 +139,6 @@ class ArticleControllerTest {
     void deleteArticle() throws Exception {
 
         //given
-        given(articleService.deleteArticle(any()))
-                .willReturn(true);
-
         //when
         //then
         mockMvc.perform(delete("/articles")
@@ -157,7 +148,6 @@ class ArticleControllerTest {
                                 new DeleteArticleRequest(1L, "1234")
                         )))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"))
                 .andDo(print());
 
     }

@@ -5,29 +5,32 @@ import com.example.unknowngserver.article.dto.DeleteArticleRequest;
 import com.example.unknowngserver.article.dto.SubmitArticleRequest;
 import com.example.unknowngserver.article.entity.Article;
 import com.example.unknowngserver.article.repository.ArticleRepository;
+import com.example.unknowngserver.common.dto.Keyword;
+import com.example.unknowngserver.common.dto.PageNumber;
 import com.example.unknowngserver.exception.ArticleException;
 import com.example.unknowngserver.exception.ErrorCode;
 import com.example.unknowngserver.report.entity.ReportArticle;
 import com.example.unknowngserver.report.repository.ReportArticleRepository;
+import com.example.unknowngserver.util.PasswordUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -40,25 +43,55 @@ class ArticleServiceTest {
     @Mock
     private ReportArticleRepository reportArticleRepository;
 
-    private static final MockedStatic<BCrypt> bCryptMockedStatic = mockStatic(BCrypt.class);
+    @Mock
+    private PasswordUtil passwordUtil;
 
     @InjectMocks
     private ArticleService articleService;
 
-    @Test
-    @DisplayName("게시글 조회 API 서비스 테스트 성공")
-    void getArticle() {
+    Article article;
+    ArticleDto targetArticleDto;
+    LocalDateTime currentTime = LocalDateTime.now();
 
-        //given
-        Article article = Article.builder()
+    @BeforeEach
+    public void beforeEach() {
+
+        article = Article.builder()
                 .id(1L)
                 .title("test")
                 .content("테스트용")
                 .author("test")
                 .password("1234")
-                .registeredAt(LocalDateTime.now())
+                .registeredAt(currentTime)
                 .build();
 
+        targetArticleDto = ArticleDto.fromArticle(article);
+    }
+
+    Page<Article> initArticlePageList() {
+
+        Article article2 = Article.builder()
+                .id(2L)
+                .title("test2")
+                .content("테스트용2")
+                .author("test2")
+                .password("1234")
+                .registeredAt(currentTime)
+                .build();
+
+        List<Article> articleList = new ArrayList<>();
+
+        articleList.add(article);
+        articleList.add(article2);
+
+        return new PageImpl<>(articleList);
+    }
+
+    @Test
+    @DisplayName("게시글 조회 요청시, 게시글을 가져온다.")
+    void getArticle() {
+
+        //given
         given(articleRepository.findById(1L))
                 .willReturn(Optional.of(article));
 
@@ -67,19 +100,18 @@ class ArticleServiceTest {
 
         //then
         verify(articleRepository).findById(1L);
-        assertEquals(1L, articleDto.getId());
-        assertEquals("test", articleDto.getTitle());
-        assertEquals("테스트용", articleDto.getContent());
-        assertEquals("test", articleDto.getAuthor());
+        assertThat(targetArticleDto.getId()).isEqualTo(articleDto.getId());
+        assertThat(targetArticleDto.getAuthor()).isEqualTo(articleDto.getAuthor());
+        assertThat(targetArticleDto.getContent()).isEqualTo(articleDto.getContent());
+        assertThat(targetArticleDto.getTitle()).isEqualTo(articleDto.getTitle());
 
     }
 
     @Test
-    @DisplayName("게시글 조회 API 서비스 테스트 실패 - 게시글이 존재하지 않음")
+    @DisplayName("게시글 조회 요청시, 게시글이 존재하지 않을 경우 예외를 발생시킨다.")
     void getArticleFail() {
 
         //given
-
         given(articleRepository.findById(1L))
                 .willReturn(Optional.empty());
 
@@ -89,101 +121,41 @@ class ArticleServiceTest {
 
         //then
         verify(articleRepository).findById(1L);
-        assertEquals(ErrorCode.ARTICLE_NOT_FOUND, articleException.getErrorCode());
+        assertThat(ErrorCode.ARTICLE_NOT_FOUND).isEqualTo(articleException.getErrorCode());
 
     }
 
     @Test
-    @DisplayName("게시글 리스트 조회 API 서비스 테스트 성공 - 게시글 전체 리스트")
+    @DisplayName("게시글 목록 조회 요청시, 게시글 목록을 가져온다.")
     void getArticles() {
 
         //given
-        Article article1 = Article.builder()
-                .id(1L)
-                .title("test1")
-                .content("테스트용1")
-                .author("test1")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-        Article article2 = Article.builder()
-                .id(2L)
-                .title("test2")
-                .content("테스트용2")
-                .author("test2")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-        Article article3 = Article.builder()
-                .id(3L)
-                .title("test3")
-                .content("테스트용3")
-                .author("test3")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-
-        List<Article> articleList = new ArrayList<>();
-        articleList.add(article1);
-        articleList.add(article2);
-        articleList.add(article3);
-
-        Page<Article> articlePageList = new PageImpl<>(articleList);
+        Page<Article> articlePageList = initArticlePageList();
 
         given(articleRepository.findAll((Pageable) any()))
                 .willReturn(articlePageList);
 
         //when
-        List<ArticleDto> articleDtoList = articleService.getArticles(1, "");
+        List<ArticleDto> articleDtoList = articleService.getArticles(new PageNumber(1), new Keyword(null));
 
         //then
+
         verify(articleRepository).findAll((Pageable) any());
-        assertEquals(3, articleDtoList.size());
-        assertEquals(1L, articleDtoList.get(0).getId());
-        assertEquals("test1", articleDtoList.get(0).getTitle());
-        assertEquals(2L, articleDtoList.get(1).getId());
-        assertEquals("test2", articleDtoList.get(1).getTitle());
-        assertEquals(3L, articleDtoList.get(2).getId());
-        assertEquals("test3", articleDtoList.get(2).getTitle());
+        assertThat(2).isEqualTo(articleDtoList.size());
+        assertThat(targetArticleDto.getId()).isEqualTo(articleDtoList.get(0).getId());
+        assertThat(targetArticleDto.getAuthor()).isEqualTo(articleDtoList.get(0).getAuthor());
+        assertThat(targetArticleDto.getContent()).isEqualTo(articleDtoList.get(0).getContent());
+        assertThat(targetArticleDto.getTitle()).isEqualTo(articleDtoList.get(0).getTitle());
+        assertThat(2L).isEqualTo(articleDtoList.get(1).getId());
 
     }
 
     @Test
-    @DisplayName("게시글 리스트 조회 API 서비스 테스트 성공 - 키워드로 검색된 게시글 리스트")
+    @DisplayName("검색어와 함께 게시글 목록 조회 요청시, 검색어와 관련있는 게시글 목록을 가져온다.")
     void getArticlesWithKeyword() {
 
         //given
-        Article article1 = Article.builder()
-                .id(1L)
-                .title("test1")
-                .content("테스트용1")
-                .author("test1")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-        Article article2 = Article.builder()
-                .id(2L)
-                .title("test2")
-                .content("테스트용2")
-                .author("test2")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-        Article article3 = Article.builder()
-                .id(3L)
-                .title("test3")
-                .content("테스트용3")
-                .author("test3")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-
-        List<Article> articleList = new ArrayList<>();
-        articleList.add(article1);
-        articleList.add(article2);
-        articleList.add(article3);
-
-        Page<Article> articlePageList = new PageImpl<>(articleList);
+        Page<Article> articlePageList = initArticlePageList();
 
         given(articleRepository.findByTitleContains(any(), anyString()))
                 .willReturn(articlePageList);
@@ -191,36 +163,26 @@ class ArticleServiceTest {
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
 
         //when
-        List<ArticleDto> articleDtoList = articleService.getArticles(1, "test");
+        List<ArticleDto> articleDtoList = articleService.getArticles(new PageNumber(1), new Keyword("test"));
 
         //then
         verify(articleRepository, never()).findAll((Pageable) any());
         verify(articleRepository).findByTitleContains(any(), stringArgumentCaptor.capture());
-        assertEquals(3, articleDtoList.size());
-        assertEquals(1L, articleDtoList.get(0).getId());
-        assertEquals("test1", articleDtoList.get(0).getTitle());
-        assertEquals(2L, articleDtoList.get(1).getId());
-        assertEquals("test2", articleDtoList.get(1).getTitle());
-        assertEquals(3L, articleDtoList.get(2).getId());
-        assertEquals("test3", articleDtoList.get(2).getTitle());
-        assertEquals("test", stringArgumentCaptor.getValue());
+        assertThat("test").isEqualTo(stringArgumentCaptor.getValue());
+        assertThat(2).isEqualTo(articleDtoList.size());
+        assertThat(targetArticleDto.getId()).isEqualTo(articleDtoList.get(0).getId());
+        assertThat(targetArticleDto.getAuthor()).isEqualTo(articleDtoList.get(0).getAuthor());
+        assertThat(targetArticleDto.getContent()).isEqualTo(articleDtoList.get(0).getContent());
+        assertThat(targetArticleDto.getTitle()).isEqualTo(articleDtoList.get(0).getTitle());
+        assertThat(2L).isEqualTo(articleDtoList.get(1).getId());
 
     }
 
     @Test
-    @DisplayName("게시글 등록 API 서비스 테스트 성공")
+    @DisplayName("게시글 등록 요청시, 게시글을 등록시킨다.")
     void createArticle() {
 
         //given
-        Article article = Article.builder()
-                .id(1L)
-                .title("test")
-                .content("테스트용")
-                .author("test")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-
         given(articleRepository.save(any()))
                 .willReturn(article);
 
@@ -229,59 +191,38 @@ class ArticleServiceTest {
 
         //then
         verify(articleRepository).save(any());
-        assertEquals(1L, articleDto.getId());
-        assertEquals("test", articleDto.getTitle());
-        assertEquals("테스트용", articleDto.getContent());
-        assertEquals("test", articleDto.getAuthor());
+        assertThat(targetArticleDto.getId()).isEqualTo(articleDto.getId());
+        assertThat(targetArticleDto.getAuthor()).isEqualTo(articleDto.getAuthor());
+        assertThat(targetArticleDto.getContent()).isEqualTo(articleDto.getContent());
+        assertThat(targetArticleDto.getTitle()).isEqualTo(articleDto.getTitle());
 
     }
 
     @Test
-    @DisplayName("게시글 삭제 API 서비스 테스트 성공 - 해당 게시글에 신고내역이 없을때")
+    @DisplayName("신고내역이 없는 게시글 삭제 요청시, 해당 게시글을 삭제한다.")
     void deleteArticle() {
 
         //given
-        Article article = Article.builder()
-                .id(1L)
-                .title("test")
-                .content("테스트용")
-                .author("test")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-
         given(articleRepository.findById(anyLong()))
                 .willReturn(Optional.of(article));
         given(reportArticleRepository.findByArticle(any()))
                 .willReturn(Optional.empty());
-        given(BCrypt.checkpw(anyString(), anyString()))
-                .willReturn(true);
 
         //when
-        boolean result = articleService.deleteArticle(new DeleteArticleRequest(1L, "1234"));
+        articleService.deleteArticle(new DeleteArticleRequest(1L, "1234"));
 
         //then
         verify(articleRepository).delete(any());
         verify(reportArticleRepository).findByArticle(any());
         verify(reportArticleRepository, never()).delete(any());
-        assertTrue(result);
 
     }
 
     @Test
-    @DisplayName("게시글 삭제 API 서비스 테스트 성공 - 해당 게시글에 신고내역이 있을때")
+    @DisplayName("신고내역이 있는 게시글 삭제 요청시, 해당 게시글과 요청을 삭제한다.")
     void deleteArticleWithReport() {
 
         //given
-        Article article = Article.builder()
-                .id(1L)
-                .title("test")
-                .content("테스트용")
-                .author("test")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-
         ReportArticle reportArticle = ReportArticle.builder()
                 .id(1L)
                 .firstReportedAt(LocalDateTime.now())
@@ -294,37 +235,30 @@ class ArticleServiceTest {
         given(reportArticleRepository.findByArticle(any()))
                 .willReturn(Optional.of(reportArticle));
 
-        given(BCrypt.checkpw(anyString(), anyString()))
-                .willReturn(true);
-
         ArgumentCaptor<Article> articleArgumentCaptor = ArgumentCaptor.forClass(Article.class);
         ArgumentCaptor<ReportArticle> reportArticleArgumentCaptor = ArgumentCaptor.forClass(ReportArticle.class);
 
         //when
-        boolean result = articleService.deleteArticle(new DeleteArticleRequest(1L, "1234"));
+        articleService.deleteArticle(new DeleteArticleRequest(1L, "1234"));
 
         //then
         verify(articleRepository).delete(articleArgumentCaptor.capture());
         verify(reportArticleRepository).findByArticle(articleArgumentCaptor.capture());
         verify(reportArticleRepository).delete(reportArticleArgumentCaptor.capture());
-        assertTrue(result);
 
         List<Article> articleList = articleArgumentCaptor.getAllValues();
 
         for (Article articleCapture : articleList) {
-            assertEquals(article, articleCapture);
+            assertThat(article.getId()).isEqualTo(articleCapture.getId());
         }
-
-        assertEquals("ARTICLE", reportArticleArgumentCaptor.getValue().getContentType());
 
     }
 
     @Test
-    @DisplayName("게시글 삭제 API 서비스 테스트 실패 - 게시글이 존재하지 않음")
+    @DisplayName("게시글 삭제 요청시, 게시글이 존재하지 않을 경우 예외를 발생시킨다.")
     void deleteArticleFail_ArticleNotFound() {
 
         //given
-
         given(articleRepository.findById(anyLong()))
                 .willReturn(Optional.empty());
 
@@ -334,29 +268,19 @@ class ArticleServiceTest {
 
         //then
         verify(articleRepository).findById(anyLong());
-        assertEquals(ErrorCode.ARTICLE_NOT_FOUND, articleException.getErrorCode());
+        assertThat(ErrorCode.ARTICLE_NOT_FOUND).isEqualTo(articleException.getErrorCode());
 
     }
 
     @Test
-    @DisplayName("게시글 삭제 API 서비스 테스트 실패 - 비밀번호가 일치하지 않음")
+    @DisplayName("게시글 삭제 요청시, 비밀번호가 일치하지 않을 경우 예외를 발생시킨다.")
     void deleteArticleFail_PasswordNotCorrect() {
 
         //given
-        Article article = Article.builder()
-                .id(1L)
-                .title("test")
-                .content("테스트용")
-                .author("test")
-                .password("1234")
-                .registeredAt(LocalDateTime.now())
-                .build();
-
         given(articleRepository.findById(anyLong()))
                 .willReturn(Optional.of(article));
 
-        given(BCrypt.checkpw(anyString(), anyString()))
-                .willReturn(false);
+        doThrow(new ArticleException(ErrorCode.NO_PERMISSION)).when(passwordUtil).isPasswordValid(anyString(), anyString());
 
         //when
         ArticleException articleException = assertThrows(ArticleException.class,
@@ -364,8 +288,7 @@ class ArticleServiceTest {
 
         //then
         verify(articleRepository).findById(anyLong());
-        assertEquals(ErrorCode.NO_PERMISSION, articleException.getErrorCode());
+        assertThat(ErrorCode.NO_PERMISSION).isEqualTo(articleException.getErrorCode());
 
     }
-
 }

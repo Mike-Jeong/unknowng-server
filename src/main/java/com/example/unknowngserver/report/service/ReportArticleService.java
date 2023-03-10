@@ -14,6 +14,7 @@ import com.example.unknowngserver.report.repository.ReportRecordRepository;
 import com.example.unknowngserver.report.type.ReportType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;

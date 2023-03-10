@@ -1,9 +1,10 @@
 package com.example.unknowngserver.report.service;
 
-import com.example.unknowngserver.report.dto.ReportDetailDto;
+import com.example.unknowngserver.common.dto.PageNumber;
+import com.example.unknowngserver.exception.ErrorCode;
+import com.example.unknowngserver.exception.ReportException;
 import com.example.unknowngserver.report.dto.ReportDto;
 import com.example.unknowngserver.report.dto.ReportRecordDto;
-import com.example.unknowngserver.report.dto.SubmitReportRequest;
 import com.example.unknowngserver.report.entity.Report;
 import com.example.unknowngserver.report.entity.ReportArticle;
 import com.example.unknowngserver.report.entity.ReportComment;
@@ -11,6 +12,7 @@ import com.example.unknowngserver.report.entity.ReportRecord;
 import com.example.unknowngserver.report.repository.ReportRecordRepository;
 import com.example.unknowngserver.report.repository.ReportRepository;
 import com.example.unknowngserver.report.type.ReportType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -40,44 +44,77 @@ class ReportServiceTest {
     private ReportRepository reportRepository;
     @Mock
     private ReportRecordRepository reportRecordRepository;
-    @Mock
-    private ReportArticleService reportArticleService;
-    @Mock
-    private ReportCommentService reportCommentService;
 
     @InjectMocks
     private ReportService reportService;
 
+    ReportArticle reportArticle;
+    ReportComment reportComment;
+    ReportRecord reportRecord1, reportRecord2, reportRecord3;
+    List<Report> reportList;
+    List<ReportRecord> reportRecordList;
+    @BeforeEach
+    public void beforeEach() {
 
-    @Test
-    @DisplayName("신고 조회 API 서비스 테스트 성공")
-    void getReports() {
+        reportList = new ArrayList<>();
+        reportRecordList = new ArrayList<>();
 
-        //given
-        Report reportA = Report.builder()
+        reportArticle = ReportArticle.builder()
                 .id(1L)
                 .firstReportedAt(LocalDateTime.now())
                 .contentType("ARTICLE")
                 .reportedCount(1)
                 .build();
-        Report reportB = Report.builder()
+        reportComment = ReportComment.builder()
                 .id(2L)
                 .firstReportedAt(LocalDateTime.now())
                 .contentType("COMMENT")
                 .reportedCount(2)
                 .build();
 
-        List<Report> reportList = new ArrayList<>();
-        reportList.add(reportA);
-        reportList.add(reportB);
+        reportList.add(reportArticle);
+        reportList.add(reportComment);
 
+        reportRecord1 = ReportRecord.builder()
+                .id(1L)
+                .report(reportArticle)
+                .reportType(ReportType.INSULT)
+                .memo("test report record")
+                .reportedDt(LocalDateTime.now())
+                .build();
+        reportRecord2 = ReportRecord.builder()
+                .id(2L)
+                .report(reportArticle)
+                .reportType(ReportType.INSULT)
+                .memo("test report record")
+                .reportedDt(LocalDateTime.now())
+                .build();
+        reportRecord3 = ReportRecord.builder()
+                .id(3L)
+                .report(reportArticle)
+                .reportType(ReportType.INSULT)
+                .memo("test report record")
+                .reportedDt(LocalDateTime.now())
+                .build();
+
+        reportRecordList.add(reportRecord1);
+        reportRecordList.add(reportRecord2);
+        reportRecordList.add(reportRecord3);
+
+    }
+
+    @Test
+    @DisplayName("신고 목록 조회 요청시, 신고 목록을 가져온다.")
+    void getReports() {
+
+        //given
         Page<Report> reportPageList = new PageImpl<>(reportList);
 
         given(reportRepository.findAll((Pageable) any()))
                 .willReturn(reportPageList);
 
         //when
-        List<ReportDto> reportDtoList = reportService.getReports(1);
+        List<ReportDto> reportDtoList = reportService.getReports(new PageNumber(1));
 
         //then
         verify(reportRepository).findAll((Pageable) any());
@@ -92,60 +129,26 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("신고 기록 조회 API 서비스 테스트 성공")
+    @DisplayName("신고 기록 목록 조회 요청시, 신고 기록 목록을 가져온다.")
     void getReportRecords() {
 
         //given
-        Report reportA = Report.builder()
-                .id(1L)
-                .firstReportedAt(LocalDateTime.now())
-                .contentType("ARTICLE")
-                .reportedCount(1)
-                .build();
-
-        ReportRecord reportRecord1 = ReportRecord.builder()
-                .id(1L)
-                .report(reportA)
-                .reportType(ReportType.INSULT)
-                .memo("test report record")
-                .reportedDt(LocalDateTime.now())
-                .build();
-        ReportRecord reportRecord2 = ReportRecord.builder()
-                .id(2L)
-                .report(reportA)
-                .reportType(ReportType.INSULT)
-                .memo("test report record")
-                .reportedDt(LocalDateTime.now())
-                .build();
-        ReportRecord reportRecord3 = ReportRecord.builder()
-                .id(3L)
-                .report(reportA)
-                .reportType(ReportType.INSULT)
-                .memo("test report record")
-                .reportedDt(LocalDateTime.now())
-                .build();
-
-        List<ReportRecord> reportRecordList = new ArrayList<>();
-        reportRecordList.add(reportRecord1);
-        reportRecordList.add(reportRecord2);
-        reportRecordList.add(reportRecord3);
-
         Page<ReportRecord> reportRecordPageList = new PageImpl<>(reportRecordList);
 
         given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportA));
+                .willReturn(Optional.of(reportArticle));
         given(reportRecordRepository.findAllByReport(any(), any()))
                 .willReturn(reportRecordPageList);
 
         ArgumentCaptor<Report> reportArgumentCaptor = ArgumentCaptor.forClass(Report.class);
 
         //when
-        List<ReportRecordDto> reportRecordDtoList = reportService.getReportRecords(1L, 1);
+        List<ReportRecordDto> reportRecordDtoList = reportService.getReportRecords(1L, new PageNumber(1));
 
         //then
         verify(reportRepository).findById(1L);
         verify(reportRecordRepository).findAllByReport(reportArgumentCaptor.capture(), any());
-        assertEquals(reportA, reportArgumentCaptor.getValue());
+        assertEquals(reportArticle, reportArgumentCaptor.getValue());
         assertEquals(3, reportRecordDtoList.size());
         assertEquals(1L, reportRecordDtoList.get(0).getId());
         assertEquals("test report record", reportRecordDtoList.get(0).getMemo());
@@ -160,170 +163,24 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("신고 등록 API 서비스 테스트 성공 - 게시글 신고")
-    void createReportArticle() {
+    @DisplayName("특정 신고의 신고 기록 목록 조회 요청시, 헤딩신고내역이 없을 경우 예외를 발생시킨다.")
+    void getReportRecordsFail_ReportNotFound() {
 
         //given
-        given(reportArticleService.createReportArticle(any()))
-                .willReturn(true);
-
-        //when
-        boolean result = reportService.createReport(new SubmitReportRequest("ARTICLE", 1L, "INSULT", "test memo"));
-
-        //then
-        verify(reportArticleService).createReportArticle(any());
-        verify(reportCommentService, never()).createReportComment(any());
-        assertTrue(result);
-
-    }
-
-    @Test
-    @DisplayName("신고 등록 API 서비스 테스트 성공 - 댓글 신고")
-    void createReportComment() {
-
-        //given
-        given(reportCommentService.createReportComment(any()))
-                .willReturn(true);
-
-        //when
-        boolean result = reportService.createReport(new SubmitReportRequest("COMMENT", 1L, "INSULT", "test memo"));
-
-        //then
-        verify(reportArticleService, never()).createReportArticle(any());
-        verify(reportCommentService).createReportComment(any());
-        assertTrue(result);
-
-    }
-
-    @Test
-    @DisplayName("신고 삭제 API 서비스 테스트 성공 - 게시글 신고")
-    void deleteReportArticle() {
-
-        //given
-        ReportArticle reportArticle = ReportArticle.builder()
-                .id(1L)
-                .contentType("ARTICLE")
-                .reportedCount(1)
-                .build();
-
         given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportArticle));
-        given(reportArticleService.deleteReportArticle(any()))
-                .willReturn(true);
+                .willReturn(Optional.empty());
 
-        ArgumentCaptor<ReportArticle> reportArticleArgumentCaptor = ArgumentCaptor.forClass(ReportArticle.class);
+        ArgumentCaptor<Report> reportArgumentCaptor = ArgumentCaptor.forClass(Report.class);
 
         //when
-        boolean result = reportService.deleteReport(1L);
+        ReportException reportException = assertThrows(ReportException.class,
+                () -> reportService.getReportRecords(1L, new PageNumber(1)));
 
         //then
-        verify(reportArticleService).deleteReportArticle(reportArticleArgumentCaptor.capture());
-        verify(reportCommentService, never()).deleteReportComment(any());
-        assertTrue(result);
-        assertEquals(reportArticle, reportArticleArgumentCaptor.getValue());
+        verify(reportRepository).findById(1L);
+        verify(reportRecordRepository, never()).findAllByReport(any(), any());
+        assertThat(ErrorCode.REPORT_NOT_FOUND).isEqualTo(reportException.getErrorCode());
 
-    }
-
-    @Test
-    @DisplayName("신고 삭제 API 서비스 테스트 성공 - 댓글 신고")
-    void deleteReportComment() {
-
-        //given
-        ReportComment reportComment = ReportComment.builder()
-                .id(1L)
-                .contentType("COMMENT")
-                .reportedCount(1)
-                .build();
-
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportComment));
-        given(reportCommentService.deleteReportComment(any()))
-                .willReturn(true);
-
-        ArgumentCaptor<ReportComment> reportCommentArgumentCaptor = ArgumentCaptor.forClass(ReportComment.class);
-
-        //when
-        boolean result = reportService.deleteReport(1L);
-
-        //then
-        verify(reportArticleService, never()).deleteReportArticle(any());
-        verify(reportCommentService).deleteReportComment(reportCommentArgumentCaptor.capture());
-        assertTrue(result);
-        assertEquals(reportComment, reportCommentArgumentCaptor.getValue());
-
-    }
-
-    @Test
-    @DisplayName("신고 상세 내용 조회 API 서비스 테스트 성공 - 게시글 신고")
-    void getReportDetailArticle() {
-
-        //given
-        ReportArticle reportArticle = ReportArticle.builder()
-                .id(1L)
-                .contentType("ARTICLE")
-                .reportedCount(1)
-                .build();
-
-        ReportDetailDto reportDetailDto = ReportDetailDto.builder()
-                .reportId(1L)
-                .reportedContentType("ARTICLE")
-                .targetId(1L)
-                .targetContent("test content")
-                .reportedCount(1)
-                .build();
-
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportArticle));
-        given(reportArticleService.getReportArticleDetail(any()))
-                .willReturn(reportDetailDto);
-
-        ArgumentCaptor<ReportArticle> reportArticleArgumentCaptor = ArgumentCaptor.forClass(ReportArticle.class);
-
-        //when
-        ReportDetailDto result = reportService.getReportDetail(1L);
-
-        //then
-        verify(reportArticleService).getReportArticleDetail(reportArticleArgumentCaptor.capture());
-        verify(reportCommentService, never()).getReportCommentDetail(any());
-        assertEquals(reportDetailDto, result);
-        assertEquals(reportArticle, reportArticleArgumentCaptor.getValue());
-
-    }
-
-    @Test
-    @DisplayName("신고 상세 내용 조회 API 서비스 테스트 성공 - 댓글 신고")
-    void getReportDetailComment() {
-
-        //given
-        ReportComment reportComment = ReportComment.builder()
-                .id(1L)
-                .contentType("COMMENT")
-                .reportedCount(1)
-                .build();
-
-        ReportDetailDto reportDetailDto = ReportDetailDto.builder()
-                .reportId(1L)
-                .reportedContentType("COMMENT")
-                .targetId(1L)
-                .targetContent("test content")
-                .reportedCount(1)
-                .build();
-
-        given(reportRepository.findById(1L))
-                .willReturn(Optional.of(reportComment));
-        given(reportCommentService.getReportCommentDetail(any()))
-                .willReturn(reportDetailDto);
-
-        ArgumentCaptor<ReportComment> reportCommentArgumentCaptor = ArgumentCaptor.forClass(ReportComment.class);
-
-        //when
-        ReportDetailDto result = reportService.getReportDetail(1L);
-
-        //then
-        verify(reportArticleService, never()).getReportArticleDetail(any());
-        verify(reportCommentService).getReportCommentDetail(reportCommentArgumentCaptor.capture());
-        assertEquals(reportDetailDto, result);
-        assertEquals(reportComment, reportCommentArgumentCaptor.getValue());
     }
 
 }
