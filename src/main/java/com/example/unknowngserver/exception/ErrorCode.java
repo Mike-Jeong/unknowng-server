@@ -16,6 +16,7 @@ public enum ErrorCode {
     NO_PERMISSION(HttpStatus.FORBIDDEN,"요청에 대한 권한이 없습니다."),
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED, "접근 권한이 없습니다."),
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
+    NO_LOGIN_INFORMATION_FOUND(HttpStatus.UNAUTHORIZED, "로그인 정보가 없습니다."),
     ADMIN_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 관리자를 찾을 수 없습니다."),
     EMAIL_ALREADY_USE(HttpStatus.BAD_REQUEST, "요청하신 이메일이 이미 사용 중 입니다.");
 

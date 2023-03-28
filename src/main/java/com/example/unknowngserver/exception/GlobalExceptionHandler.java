@@ -26,4 +26,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse passwordExceptionHandler(PasswordException e) {
         return new ErrorResponse(e.getStatus(), e.getErrorCode(), e.getErrorMessage());
     }
+
+    @ExceptionHandler(AuthException.class)
+    public ErrorResponse authExceptionHandler(AuthException e) {
+        return new ErrorResponse(e.getStatus(), e.getErrorCode(), e.getErrorMessage());
+    }
 }

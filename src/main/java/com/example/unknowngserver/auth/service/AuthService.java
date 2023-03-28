@@ -17,6 +17,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.session.data.redis.RedisIndexedSessionRepository;
+import org.springframework.session.data.redis.RedisOperationsSessionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class AuthService implements UserDetailsService {
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final AdminRepository adminRepository;
+    private final RedisIndexedSessionRepository redisIndexedSessionRepository;
 
     @Transactional
     public void login(LoginRequest loginRequest) {
@@ -48,9 +51,15 @@ public class AuthService implements UserDetailsService {
 
         HttpSession session = SessionUtil.getSession();
 
-        if(session != null) {
-            session.invalidate();
+        if (session == null) {
+            throw new AuthException(ErrorCode.NO_LOGIN_INFORMATION_FOUND);
         }
+
+        String sessionId = session.getId();
+
+        session.invalidate();
+        redisIndexedSessionRepository.deleteById(sessionId);
+
 
     }
 
