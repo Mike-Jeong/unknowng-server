@@ -30,6 +30,6 @@ public class Admin {
     public Admin(String email, String password) {
         this.email = email;
         this.password = password;
-        adminType = AdminType.ROLE_MINOR;
+        adminType = AdminType.ROLE_UNAPPROVED;
     }
 }

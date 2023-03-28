@@ -19,7 +19,7 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @PostMapping("sign-up")
+    @PostMapping
     public ResponseEntity<Response> submitArticle(@RequestBody @Valid SignUpAdminRequest signUpAdminRequest) {
 
         adminService.signUp(signUpAdminRequest);

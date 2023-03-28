@@ -21,7 +21,6 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping
-    @PreAuthorize("hasRole('MINOR')")
     public ResponseEntity<List<ReportBoardInfo>> getReports(@ModelAttribute PageNumber page) {
 
         List<ReportDto> reportDtoList = reportService.getReports(page);
@@ -42,7 +41,7 @@ public class ReportController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('MINOR')")
+    @PreAuthorize("hasRole('APPROVED')")
     public ResponseEntity<ReportDetailInfo> getReport(@PathVariable("id") Long id) {
 
         ReportDetailDto reportDetailDto = reportService.getReportDetail(id);
@@ -53,7 +52,7 @@ public class ReportController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MAJOR')")
+    @PreAuthorize("hasRole('APPROVED')")
     public ResponseEntity<Response> deleteReport(@PathVariable("id") Long id) {
 
         reportService.deleteReport(id);
@@ -62,7 +61,7 @@ public class ReportController {
     }
 
     @GetMapping("/{reportId}/report-records")
-    @PreAuthorize("hasRole('MINOR')")
+    @PreAuthorize("hasRole('APPROVED')")
     public ResponseEntity<List<ReportRecordBoardInfo>> getReportRecords(@PathVariable("reportId") Long reportId,
                                                                         @ModelAttribute PageNumber page) {
 
