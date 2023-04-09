@@ -33,3 +33,15 @@ jobs:
 
       - name: Docker Hub 퍼블리시 # (4)
         run: docker push ${{secrets.DOCKERHUB_USERNAME}}/unknown-server
+        
+      - name: AWS EC2 작업 (Docker 이미지 다운 및 실행)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_KEY }}
+          script: |
+            docker stop $(docker ps -a -q) 
+            docker rm -f $(docker ps -qa)
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/unknown-server
+            docker run --env-file /home/ubuntu/docker-env/unknowng.env -p 8080:8080 --name unknowngserver ${{ secrets.DOCKERHUB_USERNAME }}/unknown-server
