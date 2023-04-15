@@ -6,7 +6,7 @@ import com.example.unknowngserver.auth.dto.LoginRequest;
 import com.example.unknowngserver.exception.AdminException;
 import com.example.unknowngserver.exception.AuthException;
 import com.example.unknowngserver.exception.ErrorCode;
-import com.example.unknowngserver.util.SessionUtil;
+import com.example.unknowngserver.util.SessionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -32,6 +32,7 @@ public class AuthService implements UserDetailsService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final AdminRepository adminRepository;
     private final RedisIndexedSessionRepository redisIndexedSessionRepository;
+    private final SessionManager sessionManager;
 
     @Transactional
     public void login(LoginRequest loginRequest) {
@@ -48,11 +49,8 @@ public class AuthService implements UserDetailsService {
     @Transactional
     public void logout() {
 
-        HttpSession session = SessionUtil.getSession();
-
-        if (session == null) {
-            throw new AuthException(ErrorCode.NO_LOGIN_INFORMATION_FOUND);
-        }
+        HttpSession session = sessionManager.getSession()
+                .orElseThrow(() -> new AuthException(ErrorCode.NO_LOGIN_INFORMATION_FOUND));
 
         String sessionId = session.getId();
 
