@@ -6,6 +6,7 @@ import com.example.unknowngserver.report.dto.*;
 import com.example.unknowngserver.report.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -40,6 +41,7 @@ public class ReportController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('APPROVED')")
     public ResponseEntity<ReportDetailInfo> getReport(@PathVariable("id") Long id) {
 
         ReportDetailDto reportDetailDto = reportService.getReportDetail(id);
@@ -50,6 +52,7 @@ public class ReportController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('APPROVED')")
     public ResponseEntity<Response> deleteReport(@PathVariable("id") Long id) {
 
         reportService.deleteReport(id);
@@ -58,6 +61,7 @@ public class ReportController {
     }
 
     @GetMapping("/{reportId}/report-records")
+    @PreAuthorize("hasRole('APPROVED')")
     public ResponseEntity<List<ReportRecordBoardInfo>> getReportRecords(@PathVariable("reportId") Long reportId,
                                                                         @ModelAttribute PageNumber page) {
 
