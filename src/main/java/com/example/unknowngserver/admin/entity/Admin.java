@@ -1,6 +1,7 @@
 package com.example.unknowngserver.admin.entity;
 
 import com.example.unknowngserver.admin.type.AdminType;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
 @EntityListeners(AuditingEntityListener.class)

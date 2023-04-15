@@ -30,6 +30,15 @@ public class AdminService {
                 .build());
     }
 
+    @Transactional(readOnly = true)
+    public Admin getAdminByEmail(String email) {
+
+        Admin admin = adminRepository.findByEmail(email)
+                .orElseThrow(() -> new AdminException(ErrorCode.ADMIN_NOT_FOUND));
+
+        return admin;
+    }
+
     private void emailDuplicateCheck(String email) {
         if (adminRepository.existsByEmail(email)) {
             throw new AdminException(ErrorCode.EMAIL_ALREADY_USE);
