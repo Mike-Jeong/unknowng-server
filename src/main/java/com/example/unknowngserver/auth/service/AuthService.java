@@ -1,10 +1,9 @@
 package com.example.unknowngserver.auth.service;
 
-import com.example.unknowngserver.admin.repository.AdminRepository;
 import com.example.unknowngserver.auth.dto.LoginRequest;
 import com.example.unknowngserver.exception.AuthException;
 import com.example.unknowngserver.exception.ErrorCode;
-import com.example.unknowngserver.util.SessionManager;
+import com.example.unknowngserver.auth.component.SessionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -40,14 +39,12 @@ public class AuthService {
     @Transactional
     public void logout() {
 
-        HttpSession session = sessionManager.getSession()
-                .orElseThrow(() -> new AuthException(ErrorCode.NO_LOGIN_INFORMATION_FOUND));
+        HttpSession session = sessionManager.getSession();
 
         String sessionId = session.getId();
 
         session.invalidate();
         redisIndexedSessionRepository.deleteById(sessionId);
-
 
     }
 }

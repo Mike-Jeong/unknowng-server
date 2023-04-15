@@ -1,5 +1,7 @@
-package com.example.unknowngserver.util;
+package com.example.unknowngserver.auth.component;
 
+import com.example.unknowngserver.exception.AuthException;
+import com.example.unknowngserver.exception.ErrorCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -10,8 +12,13 @@ import java.util.Optional;
 @Component
 public class SessionManager {
 
-    public Optional<HttpSession> getSession() {
+    public HttpSession getSession() {
+
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-        return Optional.ofNullable(servletRequestAttributes.getRequest().getSession(false));
+
+        HttpSession httpSession = Optional.ofNullable(servletRequestAttributes.getRequest().getSession(false))
+                .orElseThrow(() -> new AuthException(ErrorCode.NO_LOGIN_INFORMATION_FOUND));
+
+        return httpSession;
     }
 }
